@@ -2,12 +2,8 @@ import { Viewport } from "./ui/Viewport";
 import { ErrorBanner } from "./ui/ErrorBanner";
 import { Toolbar } from "./ui/Toolbar";
 import { FeatureTree } from "./ui/FeatureTree";
+import { Inspector } from "./ui/Inspector";
 import { useStore } from "./state/store";
-
-// Task 19에서 실제 인스펙터로 교체된다
-function Inspector() {
-  return null;
-}
 
 export function App() {
   const kernelStatus = useStore((s) => s.kernelStatus);
