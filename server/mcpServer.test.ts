@@ -61,6 +61,8 @@ beforeEach(async () => {
 afterEach(async () => {
   await client.close();
   rmSync(dir, { recursive: true, force: true });
+  // 치명적 오류 테스트가 남긴 일회성 목이 다음 테스트로 새지 않게 원 구현으로 되돌린다
+  vi.mocked(validatePart).mockReset();
 });
 
 describe("도구 목록", () => {
@@ -77,6 +79,15 @@ describe("도구 목록", () => {
       "write_model",
     ]);
     expect((await client.listResources()).resources[0].uri).toBe("doc://3designer/schema");
+  });
+
+  it("도구 annotations: 읽기 전용·파괴적 구분", async () => {
+    const tools = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t.annotations]));
+    for (const name of ["get_model", "validate", "screenshot"]) expect(tools[name], name).toMatchObject({ readOnlyHint: true });
+    for (const name of ["write_model", "delete_feature"]) expect(tools[name], name).toMatchObject({ destructiveHint: true });
+    for (const name of ["set_parameter", "add_feature", "update_feature"]) {
+      expect(tools[name], name).toMatchObject({ destructiveHint: false, idempotentHint: true });
+    }
     expect(await resourceText("doc://3designer/schema")).toBe("# 스키마");
   });
 
@@ -250,13 +261,25 @@ describe("편집 도구", () => {
     expect(fileJson().parameters.D).toBe(40);
   });
 
+  it("set_parameter는 변수 이름 형식을 검사한다", async () => {
+    const before = readFileSync(file, "utf8");
+    for (const name of ["1abc", "a-b", "a b", "", "볼트"]) {
+      const r = await call("set_parameter", { name, value: 1 });
+      expect(r.isError, name).toBe(true);
+      expect(textOf(r), name).toMatch(/변수 이름은/);
+    }
+    expect(readFileSync(file, "utf8")).toBe(before);
+    expect(jsonOf(await call("set_parameter", { name: "_w2", value: 1 })).ok).toBe(true);
+    expect(fileJson().parameters._w2).toBe(1);
+  });
+
   it("add_feature는 끝에 붙이고 index가 있으면 그 자리에", async () => {
     const r = jsonOf(
       await call("add_feature", {
-        feature: { id: "top", type: "chamfer", name: "모따기", distance: 0.5, edges: "top" },
+        feature: { id: "top", type: "chamfer", name: "모따기", distance: 100, edges: "bottom" },
       }),
     );
-    // 윗면은 이미 필렛되어 모따기할 모서리가 없다 → 커널 오류지만 스키마는 통과하므로 쓰인다
+    // 부품보다 큰 모따기 → 확실한 커널 오류. 스키마는 통과하므로 쓰이고 features로 알린다
     expect(r.written).toBe(true);
     expect(r.ok).toBe(false);
     expect(r.features[0]).toMatchObject({ featureId: "top", stage: "kernel" });
@@ -264,6 +287,13 @@ describe("편집 도구", () => {
     await call("add_feature", { feature: { id: "base", type: "box", size: [60, 60, 2] }, index: 0 });
     expect(fileJson().features[0].id).toBe("base");
     expect(fileJson().features).toHaveLength(7);
+  });
+
+  it("add_feature index가 범위를 넘으면 끝에 붙는다", async () => {
+    const r = jsonOf(await call("add_feature", { feature: { id: "far", type: "box", size: [1, 1, 1] }, index: 99 }));
+    expect(r.written).toBe(true);
+    expect(fileJson().features.at(-1).id).toBe("far");
+    expect(fileJson().features).toHaveLength(6);
   });
 
   it("add_feature 중복 id는 스키마 오류로 거부하고 쓰지 않는다", async () => {
@@ -324,6 +354,22 @@ describe("편집 도구", () => {
     const r = await call("update_feature", { id: "bolts", patch: { type: "box" } });
     expect(r.isError).toBe(true);
     expect(textOf(r)).toMatch(/type/);
+    expect(readFileSync(file, "utf8")).toBe(before);
+  });
+
+  it("update_feature로 id를 바꿀 수 있고 응답의 id가 최종 id다", async () => {
+    const r = jsonOf(await call("update_feature", { id: "edge", patch: { id: "topFillet", name: "윗면 R" } }));
+    expect(r.ok).toBe(true);
+    expect(r.id).toBe("topFillet");
+    expect(fileJson().features[4]).toMatchObject({ id: "topFillet", name: "윗면 R", radius: 1 });
+    expect(fileJson().features).toHaveLength(5);
+    // id를 안 바꾸면 응답 id는 원래 id
+    expect(jsonOf(await call("update_feature", { id: "bolts", patch: { diameter: 4 } })).id).toBe("bolts");
+    // 중복 id로는 바꿀 수 없다
+    const before = readFileSync(file, "utf8");
+    const dup = await call("update_feature", { id: "topFillet", patch: { id: "body" } });
+    expect(dup.isError).toBe(true);
+    expect(textOf(dup)).toMatch(/id 중복/);
     expect(readFileSync(file, "utf8")).toBe(before);
   });
 

@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ProjectFile } from "./projectFile";
+import { writeFileAtomic } from "./atomicWrite";
 
 let dir: string;
 beforeEach(() => {
@@ -40,5 +41,31 @@ describe("ProjectFile", () => {
   it("derives the errors file path", () => {
     const pf = new ProjectFile(join(dir, "flange.3d.json"));
     expect(pf.errorsPath).toBe(join(dir, "flange.3d.errors.json"));
+  });
+});
+
+describe("writeFileAtomic", () => {
+  it("내용을 쓰고 임시 파일을 남기지 않는다", () => {
+    const path = join(dir, "a.3d.json");
+    writeFileAtomic(path, "first\n");
+    expect(readFileSync(path, "utf8")).toBe("first\n");
+    writeFileAtomic(path, "second\n"); // 기존 파일 덮어쓰기
+    expect(readFileSync(path, "utf8")).toBe("second\n");
+    expect(readdirSync(dir)).toEqual(["a.3d.json"]);
+  });
+
+  it("실패하면 임시 파일을 치우고 던진다", () => {
+    const asDir = join(dir, "a.3d.json");
+    mkdirSync(asDir); // 디렉터리 위로는 rename할 수 없다
+    expect(() => writeFileAtomic(asDir, "x")).toThrow();
+    expect(readdirSync(dir)).toEqual(["a.3d.json"]);
+  });
+
+  it("ProjectFile.write와 writeErrors도 임시 파일을 남기지 않는다", () => {
+    const pf = new ProjectFile(join(dir, "flange.3d.json"));
+    pf.write({ version: 1 });
+    pf.writeErrors({ schema: [], features: [] });
+    expect(readdirSync(dir).sort()).toEqual(["flange.3d.errors.json", "flange.3d.json"]);
+    expect(readFileSync(pf.errorsPath, "utf8")).toBe('{\n  "schema": [],\n  "features": []\n}\n');
   });
 });
