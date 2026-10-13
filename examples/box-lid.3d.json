@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": { "W": 60, "L": 40, "T": 2, "lip": 3, "wall": 1.6 },
+  "features": [
+    { "id": "plate", "type": "extrude", "name": "뚜껑 판",
+      "profile": { "kind": "rect", "width": "W", "height": "L", "cornerRadius": 4 }, "height": "T" },
+    { "id": "lipOuter", "type": "extrude", "name": "립 바깥",
+      "profile": { "kind": "rect", "width": "W - 2*wall", "height": "L - 2*wall", "cornerRadius": 3 },
+      "height": "lip", "transform": { "position": [0, 0, "T"] } },
+    { "id": "lipInner", "type": "extrude", "name": "립 안쪽", "op": "cut",
+      "profile": { "kind": "rect", "width": "W - 4*wall", "height": "L - 4*wall", "cornerRadius": 2 },
+      "height": "lip", "transform": { "position": [0, 0, "T"] } },
+    { "id": "round", "type": "fillet", "name": "바닥 모서리", "radius": 0.8, "edges": "bottom" }
+  ]
+}
