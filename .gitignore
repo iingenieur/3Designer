@@ -2,3 +2,4 @@ node_modules
 dist
 *.errors.json
 .DS_Store
+.*.tmp-*

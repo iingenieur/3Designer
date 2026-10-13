@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { useStore } from "../state/store";
+import { registerCapture } from "../state/screenshot";
 
 function Model() {
   const mesh = useStore((s) => s.mesh);
@@ -36,6 +37,21 @@ function Model() {
   );
 }
 
+/** 서버의 스크린샷 요청이 캔버스를 읽을 수 있게 캡처 함수를 등록한다. */
+function ScreenshotBridge() {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    // preserveDrawingBuffer 없이도 toDataURL 직전에 한 번 그리면 버퍼가 살아 있다
+    registerCapture(() => {
+      if (gl.getContext().isContextLost()) throw new Error("WebGL 컨텍스트가 손실되었습니다.");
+      gl.render(scene, camera);
+      return gl.domElement.toDataURL("image/png");
+    });
+    return () => registerCapture(null);
+  }, [gl, scene, camera]);
+  return null;
+}
+
 export function Viewport() {
   return (
     <Canvas camera={{ position: [80, -80, 60], up: [0, 0, 1], fov: 45 }} style={{ background: "#f4f6fa" }}>
@@ -47,6 +63,7 @@ export function Viewport() {
       <axesHelper args={[20]} />
       <Model />
       <OrbitControls makeDefault />
+      <ScreenshotBridge />
     </Canvas>
   );
 }

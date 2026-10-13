@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { measureVolume } from "replicad";
-import { initKernelForNode } from "./testSetup";
+import { initKernelForNode } from "./node";
 import { evaluateFeatures } from "./evaluate";
 import { PartSchema } from "../model/schema";
 import { resolvePart } from "../model/resolve";

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { makeBaseBox } from "replicad";
-import { initKernelForNode } from "./testSetup";
+import { initKernelForNode } from "./node";
 import { errorMessage, isFatalKernelError } from "./errors";
 
 beforeAll(initKernelForNode);

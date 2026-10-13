@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { watch } from "chokidar";
 import { WebSocketServer, WebSocket } from "ws";
 import { ProjectFile } from "./projectFile";
+import { ScreenshotRelay, type Send } from "./relay";
 import type { ClientMessage, ServerMessage } from "./protocol";
 
 const PORT = Number(process.env.PORT ?? 5174);
@@ -18,6 +19,7 @@ if (!existsSync(path)) {
 }
 
 const file = new ProjectFile(path);
+const relay = new ScreenshotRelay();
 const wss = new WebSocketServer({
   port: PORT,
   // 다른 사이트의 페이지가 로컬 파일 서버에 붙지 못하게 한다. 브라우저가 보내는 Origin만 검사하고, 없으면(비브라우저 클라이언트) 통과.
@@ -38,20 +40,24 @@ function broadcast(message: ServerMessage) {
   for (const client of wss.clients) if (client.readyState === WebSocket.OPEN) client.send(text);
 }
 
-/** 파일 내용을 한 클라이언트에, 또는 모두에게 보낸다. */
-function sendFile(to?: WebSocket) {
+/** 파일 내용을 한 클라이언트에, 또는 모두에게 보낸다. 에이전트도 경로를 알아야 하므로 역할을 가리지 않는다. */
+function sendFile(to?: Send) {
   let message: ServerMessage;
   try {
     message = { kind: "file", path, text: file.read() };
   } catch (e) {
     message = { kind: "fileError", message: String(e) };
   }
-  if (to) to.send(JSON.stringify(message));
+  if (to) to(message);
   else broadcast(message);
 }
 
 wss.on("connection", (socket) => {
-  sendFile(socket);
+  // 연결마다 하나뿐인 send 함수. 중계기가 이것으로 연결을 식별하므로 다시 만들지 않는다.
+  const send: Send = (m) => {
+    if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(m));
+  };
+  sendFile(send);
   socket.on("message", (raw) => {
     let message: ClientMessage;
     try {
@@ -59,12 +65,35 @@ wss.on("connection", (socket) => {
     } catch {
       return;
     }
-    if (message.kind === "save") {
-      if (file.write(message.part)) console.log("저장됨 (UI 편집)");
-    } else if (message.kind === "errors") {
-      file.writeErrors(message.errors);
+    if (!message || typeof message !== "object") return; // null, 숫자 같은 비객체 JSON
+    switch (message.kind) {
+      case "hello":
+        if (message.role === "viewer") {
+          relay.addViewer(send);
+          console.log("뷰어 연결");
+        } else if (message.role === "agent") {
+          console.log("에이전트 연결");
+        }
+        break;
+      case "save":
+        if (file.write(message.part)) console.log("저장됨 (UI 편집)");
+        break;
+      case "errors":
+        file.writeErrors(message.errors);
+        break;
+      case "screenshotRequest":
+        relay.request(send, message.id, message.text);
+        break;
+      case "screenshot":
+        relay.resolve(send, message.id, message.dataUrl);
+        break;
+      case "screenshotFailed":
+        relay.reject(send, message.id, message.message);
+        break;
+      // 알 수 없는 kind는 무시
     }
   });
+  socket.on("close", () => relay.removeClient(send));
 });
 
 /** 디스크 변경을 브라우저에 전달한다. 에디터가 파일을 통째로 바꿔치기하면 change 대신 unlink+add가 올 수 있어 add도 듣는다. */

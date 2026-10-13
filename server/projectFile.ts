@@ -1,6 +1,10 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { writeFileAtomic } from "./atomicWrite";
 
-/** 프로젝트 파일 하나의 읽기/쓰기. 자기가 쓴 내용은 기억해 감시 이벤트에서 되돌아오는 변경을 걸러낸다. */
+/**
+ * 프로젝트 파일 하나의 읽기/쓰기. 자기가 쓴 내용은 기억해 감시 이벤트에서 되돌아오는 변경을 걸러낸다.
+ * 쓰기는 원자적이라(임시 파일 + rename) MCP 서버의 쓰기와 교차해도 파일이 깨지지 않는다.
+ */
 export class ProjectFile {
   private lastWritten: string | null = null;
 
@@ -20,13 +24,13 @@ export class ProjectFile {
     const text = JSON.stringify(value, null, 2) + "\n";
     const current = this.safeRead();
     if (current === text) return false;
-    writeFileSync(this.path, text);
+    writeFileAtomic(this.path, text);
     this.lastWritten = text;
     return true;
   }
 
   writeErrors(errors: unknown): void {
-    writeFileSync(this.errorsPath, JSON.stringify(errors, null, 2) + "\n");
+    writeFileAtomic(this.errorsPath, JSON.stringify(errors, null, 2) + "\n");
   }
 
   /** 디스크의 현재 내용이 마지막으로 자기가 쓴 것과 같은가 (UI 편집이 감시 이벤트로 되돌아온 경우) */

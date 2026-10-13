@@ -5,6 +5,7 @@ import { resolvePart, type FeatureError } from "../model/resolve";
 import { KernelClient } from "../kernel/client";
 import type { MeshData } from "../kernel/protocol";
 import { Connection, type ConnectionStatus } from "./connection";
+import { prepareMatcher, isCurrentState, captureScreenshot, waitFor } from "./screenshot";
 
 export interface SchemaError {
   path: string;
@@ -14,6 +15,8 @@ export interface SchemaError {
 interface State {
   part: Part | null;
   mesh: MeshData | null;
+  /** mesh(와 featureErrors)를 만든 평가의 입력 모델. part는 바뀌었지만 평가가 아직이면 part와 다르다. */
+  meshPart: Part | null;
   featureErrors: FeatureError[];
   schemaErrors: SchemaError[];
   kernelStatus: "loading" | "ready" | "busy" | "error";
@@ -40,6 +43,10 @@ interface State {
 }
 
 let evaluationSeq = 0;
+/** 스크린샷 요청 뒤 파일의 모델이 화면에 반영되기를 기다리는 최대 시간 */
+const SCREENSHOT_WAIT_MS = 8000;
+/** 숨은 탭에서는 requestAnimationFrame이 돌지 않으므로 이 시간 뒤엔 그냥 캡처한다 */
+const FRAME_FALLBACK_MS = 100;
 /** 클라이언트가 마지막으로 보고한 워커 상태가 error인지. evaluate()가 busy→ready로 덮어쓰지 않게 한다. */
 let kernelFailed = false;
 
@@ -55,15 +62,26 @@ export const useStore = create<State>((set, get) => {
 
   const connection = new Connection(
     (m) => {
-      if (m.kind === "file") {
-        set({ filePath: m.path });
-        get().loadJson(m.text);
-      } else {
-        set({ schemaErrors: [{ path: "", message: m.message }] });
-        reportErrors();
+      switch (m.kind) {
+        case "file":
+          set({ filePath: m.path });
+          get().loadJson(m.text);
+          break;
+        case "fileError":
+          set({ schemaErrors: [{ path: "", message: m.message }] });
+          reportErrors();
+          break;
+        case "screenshotRequest":
+          void handleScreenshot(m.id, m.text);
+          break;
+        // screenshot / screenshotFailed는 에이전트에게만 가므로 뷰어는 받지 않는다
       }
     },
-    (status) => set({ connection: status }),
+    (status) => {
+      // 역할을 알려야 서버가 스크린샷 요청을 보낸다. socket.onopen 안에서 불리므로 바로 보낼 수 있다.
+      if (status === "open") connection.send({ kind: "hello", role: "viewer" });
+      set({ connection: status });
+    },
   );
 
   const SAVE_DEBOUNCE_MS = 300;
@@ -95,17 +113,73 @@ export const useStore = create<State>((set, get) => {
     try {
       const { mesh, errors: kernelErrors } = await kernel.evaluate(resolved);
       if (seq !== evaluationSeq) return; // 더 새로운 평가가 있으면 버린다
-      set({ mesh, featureErrors: [...exprErrors, ...kernelErrors], kernelStatus: kernelFailed ? "error" : "ready" });
+      set({ mesh, meshPart: part, featureErrors: [...exprErrors, ...kernelErrors], kernelStatus: kernelFailed ? "error" : "ready" });
       reportErrors();
     } catch (e) {
       if (seq !== evaluationSeq) return;
       set({
+        meshPart: part,
         featureErrors: [...exprErrors, { featureId: "*", stage: "kernel", message: e instanceof Error ? e.message : String(e) }],
         // 클라이언트가 워커 오류를 보고한 상태면 그대로 둔다
         kernelStatus: kernelFailed ? "error" : "ready",
       });
       reportErrors();
     }
+  }
+
+  /**
+   * 서버의 스크린샷 요청. 파일 텍스트의 모델로 만든 메시가 화면에 있을 때까지(최대 8초) 기다렸다가 찍는다.
+   * 판정은 isCurrentState: "busy가 아님"이 아니라 "메시가 그 모델의 것"(meshPart)을 본다 —
+   * loadJson/applyEdit는 set({part}) 뒤에야 busy로 바꾸므로 그 사이 통지에서 옛 메시를 찍을 수 있기 때문이다.
+   * 커널이 error(워커 죽음)면 화면의 메시를 믿을 수 없으니 기다리지 않고 바로 실패로 답한다.
+   * 파일에 스키마 오류가 있으면 뷰어가 마지막 성공 모델을 유지하므로 타임아웃으로 끝난다.
+   */
+  async function handleScreenshot(id: number, text: string | undefined) {
+    const matches = prepareMatcher(text);
+    const verdict = () => isCurrentState(get(), matches);
+    const settled = await waitFor(() => verdict() !== "wait", (cb) => useStore.subscribe(cb), SCREENSHOT_WAIT_MS);
+    const state = settled ? verdict() : "timeout";
+    if (state === "fail") {
+      connection.send({ kind: "screenshotFailed", id, message: `커널 오류로 뷰어가 모델을 그리지 못했습니다: ${kernelFailureMessage()}` });
+      return;
+    }
+    if (state !== "ready") {
+      connection.send({
+        kind: "screenshotFailed",
+        id,
+        message: `뷰어가 ${SCREENSHOT_WAIT_MS / 1000}초 안에 이 모델을 반영하지 못했습니다. 파일이 그 사이 UI에서 바뀌었거나 스키마 오류가 있을 수 있으니 get_model로 다시 읽고 재시도하세요.`,
+      });
+      return;
+    }
+    // React가 새 메시를 씬에 커밋할 프레임을 한 번 기다린다. 숨은 탭에서는 rAF가 멈추므로 타이머로도 깨운다.
+    await nextFrame();
+    try {
+      connection.send({ kind: "screenshot", id, dataUrl: captureScreenshot() });
+    } catch (e) {
+      connection.send({ kind: "screenshotFailed", id, message: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  /** isCurrentState가 fail인 이유: 워커가 죽었으면 kernelError, 아니면 마지막 평가의 커널 예외(featureId "*") 문구 */
+  function kernelFailureMessage(): string {
+    const { kernelStatus, kernelError, featureErrors } = get();
+    if (kernelStatus === "error") return kernelError ?? "알 수 없는 오류";
+    const failure = featureErrors.find((e) => e.featureId === "*");
+    return failure?.message ?? "알 수 없는 오류";
+  }
+
+  function nextFrame(): Promise<void> {
+    if (typeof requestAnimationFrame !== "function") return Promise.resolve();
+    return new Promise((resolve) => {
+      const frame = requestAnimationFrame(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+      const timer = setTimeout(() => {
+        cancelAnimationFrame(frame);
+        resolve();
+      }, FRAME_FALLBACK_MS);
+    });
   }
 
   /**
@@ -145,6 +219,7 @@ export const useStore = create<State>((set, get) => {
   return {
     part: null,
     mesh: null,
+    meshPart: null,
     featureErrors: [],
     schemaErrors: [],
     kernelStatus: "loading",

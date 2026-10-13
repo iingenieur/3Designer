@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "3designer": {
+      "command": "node",
+      "args": ["--import", "tsx", "server/mcp.ts"]
+    }
+  }
+}
