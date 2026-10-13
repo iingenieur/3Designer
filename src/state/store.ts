@@ -3,6 +3,7 @@ import { PartSchema, type Part } from "../model/schema";
 import { resolvePart, type FeatureError } from "../model/resolve";
 import { KernelClient } from "../kernel/client";
 import type { MeshData } from "../kernel/protocol";
+import { Connection, type ConnectionStatus } from "./connection";
 
 export interface SchemaError {
   path: string;
@@ -19,6 +20,10 @@ interface State {
   kernelError: string | null;
   /** 마지막 STL 내보내기 실패 메시지. 다음 내보내기에 성공하면 지워진다. */
   exportError: string | null;
+  /** 파일 서버(ws://…:5174)와의 연결 상태 */
+  connection: ConnectionStatus;
+  /** 서버가 감시 중인 모델 파일의 절대 경로. 아직 받지 못했으면 null. */
+  filePath: string | null;
   /** 파일 내용(JSON 문자열)을 받아 검증·평가한다. */
   loadJson: (text: string) => void;
   /** STL 바이너리를 돌려준다. 실패하면 exportError를 채우고 null. */
@@ -30,7 +35,31 @@ let evaluationSeq = 0;
 export const useStore = create<State>((set, get) => {
   const kernel = new KernelClient((status, message) => set({ kernelStatus: status, kernelError: message ?? null }));
 
-  if (import.meta.hot) import.meta.hot.dispose(() => kernel.terminate());
+  const connection = new Connection(
+    (m) => {
+      if (m.kind === "file") {
+        set({ filePath: m.path });
+        get().loadJson(m.text);
+      } else {
+        set({ schemaErrors: [{ path: "", message: m.message }] });
+        reportErrors();
+      }
+    },
+    (status) => set({ connection: status }),
+  );
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      kernel.terminate();
+      connection.close();
+    });
+  }
+
+  /** 현재 오류를 서버에 보내 `<파일>.errors.json`에 기록하게 한다. 둘 다 빈 배열이면 성공. */
+  function reportErrors() {
+    const { schemaErrors, featureErrors } = get();
+    connection.send({ kind: "errors", errors: { schema: schemaErrors, features: featureErrors } });
+  }
 
   async function evaluate(part: Part) {
     const seq = ++evaluationSeq;
@@ -40,6 +69,7 @@ export const useStore = create<State>((set, get) => {
       const { mesh, errors: kernelErrors } = await kernel.evaluate(resolved);
       if (seq !== evaluationSeq) return; // 더 새로운 평가가 있으면 버린다
       set({ mesh, featureErrors: [...exprErrors, ...kernelErrors], kernelStatus: "ready" });
+      reportErrors();
     } catch (e) {
       if (seq !== evaluationSeq) return;
       set({
@@ -47,6 +77,7 @@ export const useStore = create<State>((set, get) => {
         // 클라이언트가 워커 오류를 보고한 상태면 그대로 둔다
         ...(get().kernelStatus !== "error" ? { kernelStatus: "ready" as const } : {}),
       });
+      reportErrors();
     }
   }
 
@@ -58,6 +89,8 @@ export const useStore = create<State>((set, get) => {
     kernelStatus: "loading",
     kernelError: null,
     exportError: null,
+    connection: "connecting",
+    filePath: null,
 
     loadJson(text) {
       let raw: unknown;
@@ -65,6 +98,7 @@ export const useStore = create<State>((set, get) => {
         raw = JSON.parse(text);
       } catch (e) {
         set({ schemaErrors: [{ path: "", message: `JSON 문법 오류: ${String(e)}` }] });
+        reportErrors();
         return;
       }
       const result = PartSchema.safeParse(raw);
@@ -75,6 +109,7 @@ export const useStore = create<State>((set, get) => {
             message: i.message,
           })),
         });
+        reportErrors();
         return; // 마지막 성공 모델(part, mesh)은 유지한다
       }
       set({ part: result.data, schemaErrors: [] });

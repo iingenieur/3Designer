@@ -1,25 +1,24 @@
-import { useEffect } from "react";
 import { Viewport } from "./ui/Viewport";
 import { ErrorBanner } from "./ui/ErrorBanner";
 import { Toolbar } from "./ui/Toolbar";
 import { useStore } from "./state/store";
 
 export function App() {
-  const loadJson = useStore((s) => s.loadJson);
   const kernelStatus = useStore((s) => s.kernelStatus);
   const kernelError = useStore((s) => s.kernelError);
   const mesh = useStore((s) => s.mesh);
-
-  useEffect(() => {
-    fetch("/examples/flange.3d.json")
-      .then((r) => r.text())
-      .then(loadJson);
-  }, [loadJson]);
+  const connection = useStore((s) => s.connection);
+  const filePath = useStore((s) => s.filePath);
+  const fileName = filePath?.split("/").pop();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <header style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #ddd" }}>
         <b>3Designer</b>
+        <span style={{ fontSize: 12, color: connection === "open" ? "#2a7" : "#c33" }}>
+          서버: {connection}
+          {fileName && ` · ${fileName}`}
+        </span>
         {kernelStatus === "error" ? (
           <span style={{ fontSize: 12, color: "#cf1322" }}>커널 오류: {kernelError}</span>
         ) : (
