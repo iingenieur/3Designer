@@ -66,8 +66,12 @@ export const useStore = create<State>((set, get) => {
     (status) => set({ connection: status }),
   );
 
+  const SAVE_DEBOUNCE_MS = 300;
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
+      if (saveTimer) clearTimeout(saveTimer);
       kernel.terminate();
       connection.close();
     });
@@ -100,23 +104,26 @@ export const useStore = create<State>((set, get) => {
     }
   }
 
-  const SAVE_DEBOUNCE_MS = 300;
-  let saveTimer: ReturnType<typeof setTimeout> | null = null;
-
   /**
    * UI 편집을 적용한다: 즉시 재평가하고, 300ms 디바운스로 서버에 저장한다.
    *
-   * 경쟁 조건: 편집 직후 서버에서 외부 수정(file 메시지)이 도착하면 loadJson이 part를
-   * 덮어쓰지만, 예약된 저장은 취소하지 않는다. 사용자의 편집이 파일에 기록되어 이기는 쪽이
-   * 된다(마지막 쓰기 우선). 외부 편집과 UI 편집이 수백 ms 안에 겹치는 경우에 한한다.
+   * 저장 정책: 항상 "UI가 지금 보여주는 모델"을 저장한다. 타이머는 편집 시점의 값이 아니라
+   * 발화 시점의 get().part를 보내고, 그 사이 외부 파일 수정(file 메시지)이 도착하면
+   * loadJson이 타이머를 취소한다. 즉 외부 수정이 먼저 화면에 반영되면 그쪽이 이기고,
+   * 디스크와 화면이 어긋나는 일은 없다.
    */
   function applyEdit(next: Part) {
     set({ part: next });
     void evaluate(next);
+    scheduleSave();
+  }
+
+  function scheduleSave() {
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       saveTimer = null;
-      connection.send({ kind: "save", part: next });
+      const part = get().part;
+      if (part) connection.send({ kind: "save", part });
     }, SAVE_DEBOUNCE_MS);
   }
 
@@ -159,6 +166,11 @@ export const useStore = create<State>((set, get) => {
         });
         reportErrors();
         return; // 마지막 성공 모델(part, mesh)은 유지한다
+      }
+      // 외부 파일이 도착했으니 화면이 그것을 보여준다. 예약된 저장은 옛 편집이므로 취소한다 (저장 정책은 applyEdit 참고)
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
       }
       // 외부에서 파일이 바뀌어도 같은 id가 남아 있으면 선택을 유지한다
       const selected = get().selectedFeatureId;

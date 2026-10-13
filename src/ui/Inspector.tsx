@@ -1,44 +1,14 @@
 import { useStore } from "../state/store";
 import { NumField } from "./NumField";
 import type { Feature, Num } from "../model/schema";
-
-const LABEL: Record<string, string> = {
-  radius: "반경",
-  height: "높이",
-  size: "크기",
-  diameter: "지름",
-  depth: "깊이",
-  distance: "거리",
-  width: "폭",
-  offset: "오프셋",
-  cornerRadius: "코너 반경",
-  sides: "변 수",
-  count: "개수",
-  spacing: "간격",
-  startAngle: "시작 각도",
-  position: "위치",
-  rotation: "회전",
-  profile: "프로파일",
-  pattern: "패턴",
-  transform: "배치",
-  positions: "위치",
-};
-
-const TYPE_LABEL: Record<string, string> = {
-  box: "박스",
-  cylinder: "원통",
-  sphere: "구",
-  extrude: "돌출",
-  hole: "구멍",
-  fillet: "필렛",
-  chamfer: "챔퍼",
-};
+import { LABEL, TYPE_LABEL } from "./labels";
 
 /**
  * 문자열/불리언 값일 때 건너뛰는 키. 객체 값(예: pattern 스펙, positions 패턴)은
- * 키가 여기 있어도 재귀한다. op/edges는 Inspector가 select로 따로 그린다.
+ * 키가 여기 있어도 재귀한다. op/edges/plane/direction은 Inspector가 select로 따로 그린다.
+ * depth는 "through"만 읽기 전용으로 보여 주고, 숫자·수식이면 보통 필드다.
  */
-const SKIP = new Set(["id", "type", "name", "suppressed", "op", "edges", "plane", "kind", "pattern", "direction", "positions", "depth"]);
+const SKIP = new Set(["id", "type", "name", "suppressed", "op", "edges", "plane", "kind", "pattern", "direction", "positions"]);
 
 const AXIS = ["X", "Y", "Z"];
 
@@ -147,36 +117,61 @@ function ArrayFields({ label, value, path, onChange }: { label: string; value: u
 const selectRowStyle = { display: "flex", alignItems: "center", gap: 8, padding: "3px 0" };
 const selectLabelStyle = { width: 90, flexShrink: 0, color: "#555" };
 
+function EnumSelect({ label, value, options, testId, onChange }: { label: string; value: string; options: [string, string][]; testId: string; onChange: (v: string) => void }) {
+  return (
+    <label style={selectRowStyle}>
+      <span style={selectLabelStyle}>{label}</span>
+      <select data-testid={testId} value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map(([v, text]) => (
+          <option key={v} value={v}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+const OP_OPTIONS: [string, string][] = [["add", "add (더하기)"], ["cut", "cut (빼기)"], ["intersect", "intersect (교집합)"]];
+const EDGE_OPTIONS: [string, string][] = [["all", "all (전체)"], ["top", "top (윗면)"], ["bottom", "bottom (아랫면)"], ["vertical", "vertical (수직)"]];
+const PLANE_OPTIONS: [string, string][] = [["XY", "XY"], ["XZ", "XZ"], ["YZ", "YZ"]];
+const AXIS_OPTIONS: [string, string][] = [["X", "X"], ["Y", "Y"], ["Z", "Z"]];
+
 function FeatureFields({ feature }: { feature: Feature }) {
   const updateFeature = useStore((s) => s.updateFeature);
   // 경로 패치는 전체 피처를 다시 만들어 patch로 넘긴다 (얕은 병합과 호환)
-  const onChange = (path: Path, v: Num) => updateFeature(feature.id, setAt(feature, path, v) as Feature);
+  const setField = (path: Path, v: unknown) => updateFeature(feature.id, setAt(feature, path, v) as Feature);
+  const onChange = (path: Path, v: Num) => setField(path, v);
+
+  // 선형 패턴의 방향 select: 바디 피처는 pattern, 구멍은 positions 아래에 있다
+  const linearPatternKey =
+    "pattern" in feature && feature.pattern?.pattern === "linear"
+      ? "pattern"
+      : feature.type === "hole" && !Array.isArray(feature.positions) && feature.positions.pattern === "linear"
+        ? "positions"
+        : null;
+  const linearPattern = linearPatternKey ? (feature as unknown as Record<string, { direction: string }>)[linearPatternKey] : null;
 
   return (
     <>
       <div style={{ fontWeight: 600, marginBottom: 4 }}>
         {feature.name ?? feature.id} <span style={{ color: "#888", fontWeight: 400 }}>({TYPE_LABEL[feature.type] ?? feature.type})</span>
       </div>
-      {"op" in feature && (
-        <label style={selectRowStyle}>
-          <span style={selectLabelStyle}>연산</span>
-          <select data-testid="field-op" value={feature.op} onChange={(e) => updateFeature(feature.id, { op: e.target.value as typeof feature.op })}>
-            <option value="add">add (더하기)</option>
-            <option value="cut">cut (빼기)</option>
-            <option value="intersect">intersect (교집합)</option>
-          </select>
-        </label>
-      )}
+      {"op" in feature && <EnumSelect label="연산" value={feature.op} options={OP_OPTIONS} testId="field-op" onChange={(v) => setField(["op"], v)} />}
       {(feature.type === "fillet" || feature.type === "chamfer") && (
-        <label style={selectRowStyle}>
-          <span style={selectLabelStyle}>모서리</span>
-          <select data-testid="field-edges" value={feature.edges} onChange={(e) => updateFeature(feature.id, { edges: e.target.value as typeof feature.edges })}>
-            <option value="all">all (전체)</option>
-            <option value="top">top (윗면)</option>
-            <option value="bottom">bottom (아랫면)</option>
-            <option value="vertical">vertical (수직)</option>
-          </select>
-        </label>
+        <EnumSelect label="모서리" value={feature.edges} options={EDGE_OPTIONS} testId="field-edges" onChange={(v) => setField(["edges"], v)} />
+      )}
+      {feature.type === "extrude" && (
+        <EnumSelect label="평면" value={feature.plane} options={PLANE_OPTIONS} testId="field-plane" onChange={(v) => setField(["plane"], v)} />
+      )}
+      {linearPatternKey && linearPattern && (
+        <EnumSelect
+          label="패턴 방향"
+          value={linearPattern.direction}
+          options={AXIS_OPTIONS}
+          testId={`field-${linearPatternKey}.direction`}
+          onChange={(v) => setField([linearPatternKey, "direction"], v)}
+        />
       )}
       <Fields value={feature as unknown as Record<string, unknown>} path={[]} onChange={onChange} />
     </>

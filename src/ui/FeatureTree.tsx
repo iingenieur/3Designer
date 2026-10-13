@@ -1,15 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useStore } from "../state/store";
-
-const TYPE_LABEL: Record<string, string> = {
-  box: "박스",
-  cylinder: "원통",
-  sphere: "구",
-  extrude: "돌출",
-  hole: "구멍",
-  fillet: "필렛",
-  chamfer: "챔퍼",
-};
+import { TYPE_LABEL } from "./labels";
 
 const CONFIRM_MS = 3000;
 
