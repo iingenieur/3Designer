@@ -1,4 +1,15 @@
-import { makeBaseBox, makeCylinder, makeSphere, type Shape3D } from "replicad";
+import {
+  drawCircle,
+  drawPolysides,
+  drawRectangle,
+  drawRoundedRectangle,
+  makeBaseBox,
+  makeCylinder,
+  makeSphere,
+  type Drawing,
+  type Shape3D,
+  type Sketch,
+} from "replicad";
 import type { ResolvedPart, ResolvedFeature, FeatureError } from "../model/resolve";
 
 export interface EvaluateResult {
@@ -20,6 +31,24 @@ function applyTransform(shape: Shape3D, transform: ResolvedFeature["transform"])
   return out;
 }
 
+type ExtrudeProfile = Extract<ResolvedFeature, { type: "extrude" }>["profile"];
+
+/** 2D 프로파일을 원점 중심의 Drawing으로 만든다. polygon의 radius는 외접원 반지름이다. */
+function makeProfile(profile: ExtrudeProfile): Drawing {
+  switch (profile.kind) {
+    case "rect": {
+      const w = profile.width as number;
+      const h = profile.height as number;
+      const r = profile.cornerRadius as number | undefined;
+      return r ? drawRoundedRectangle(w, h, r) : drawRectangle(w, h);
+    }
+    case "circle":
+      return drawCircle(profile.radius as number);
+    case "polygon":
+      return drawPolysides(profile.radius as number, profile.sides as number);
+  }
+}
+
 /** 바디를 만드는 피처 하나를 독립된 솔리드로 만든다. */
 function makeBody(feature: ResolvedFeature): Shape3D | null {
   switch (feature.type) {
@@ -31,6 +60,10 @@ function makeBody(feature: ResolvedFeature): Shape3D | null {
       return makeCylinder(feature.radius as number, feature.height as number);
     case "sphere":
       return makeSphere(feature.radius as number);
+    case "extrude": {
+      const sketch = makeProfile(feature.profile).sketchOnPlane(feature.plane, feature.offset as number) as Sketch;
+      return sketch.extrude(feature.height as number);
+    }
     default:
       return null;
   }

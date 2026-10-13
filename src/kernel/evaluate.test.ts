@@ -70,3 +70,39 @@ describe("evaluateFeatures: primitives", () => {
     expect(errors[0]).toMatchObject({ featureId: "c", stage: "kernel" });
   });
 });
+
+describe("evaluateFeatures: extrude", () => {
+  it("extrudes a rectangle on XY", () => {
+    const { shape, errors } = build([
+      { id: "e", type: "extrude", profile: { kind: "rect", width: 30, height: 10 }, height: 5 },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(1500, 3);
+    expect(shape!.boundingBox.bounds).toEqual([[-15, -5, 0], [15, 5, 5]]);
+  });
+
+  it("extrudes a circle on XZ with offset", () => {
+    const { shape } = build([
+      { id: "e", type: "extrude", profile: { kind: "circle", radius: 5 }, plane: "XZ", offset: 2, height: 10 },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(Math.PI * 25 * 10, 1);
+    const [[, minY], [, maxY]] = shape!.boundingBox.bounds;
+    expect(Math.abs(maxY - minY)).toBeCloseTo(10, 6);
+  });
+
+  it("extrudes a regular polygon", () => {
+    const { shape } = build([
+      { id: "e", type: "extrude", profile: { kind: "polygon", sides: 6, radius: 10 }, height: 4 },
+    ]);
+    const hexArea = (3 * Math.sqrt(3) / 2) * 100;
+    expect(measureVolume(shape!)).toBeCloseTo(hexArea * 4, 1);
+  });
+
+  it("extrude with op cut removes material", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 40, 5] },
+      { id: "e", type: "extrude", profile: { kind: "rect", width: 10, height: 10 }, height: 5, op: "cut" },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - 500, 3);
+  });
+});
