@@ -10,7 +10,7 @@ export type ServerMessage =
 
 /**
  * 클라이언트 → 서버
- * - hello: 연결 직후 역할을 알린다. viewer만 스크린샷 요청을 받는다.
+ * - hello: 연결 직후 역할을 알린다. viewer만 스크린샷 요청을 받는다. 연결당 한 번, 역할 전환 없음.
  * - save: UI에서 편집한 모델 전체. 서버가 파일에 다시 쓴다.
  * - errors: 뷰어가 마지막 로드/평가에서 얻은 오류. 서버가 `<파일>.errors.json`에 기록한다.
  *   페이로드 모양은 `{ schema: SchemaError[], features: FeatureError[] }`이며 둘 다 빈 배열이면 성공.

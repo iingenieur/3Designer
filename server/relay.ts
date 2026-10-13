@@ -40,7 +40,7 @@ export class ScreenshotRelay {
     }
   }
 
-  request(requester: Send, requesterId: number, text: string | undefined) {
+  request(requester: Send, requesterId: number, text?: string) {
     if (this.viewers.size === 0) {
       requester({
         kind: "screenshotFailed",
@@ -52,19 +52,25 @@ export class ScreenshotRelay {
     const id = ++this.seq;
     const timer = setTimeout(() => this.fail(id, `뷰어가 ${this.timeoutMs / 1000}초 안에 응답하지 않았습니다.`), this.timeoutMs);
     this.pending.set(id, { requester, requesterId, viewers: new Set(this.viewers), timer });
-    const message: ServerMessage = text === undefined ? { kind: "screenshotRequest", id } : { kind: "screenshotRequest", id, text };
-    for (const v of this.viewers) v(message);
+    for (const v of this.viewers) v({ kind: "screenshotRequest", id, text });
   }
 
-  /** 뷰어가 캡처에 성공했다. 모르는(이미 끝난) id면 무시. */
-  resolve(id: number, dataUrl: string) {
+  /** 뷰어가 캡처에 성공했다. 모르는(이미 끝난) id이거나 그 요청을 받지 않은 클라이언트의 답이면 무시. */
+  resolve(from: Send, id: number, dataUrl: string) {
+    if (!this.isResponder(from, id)) return;
     const p = this.drop(id);
     if (p) p.requester({ kind: "screenshot", id: p.requesterId, dataUrl });
   }
 
-  /** 뷰어가 캡처에 실패했다. 모르는(이미 끝난) id면 무시. */
-  reject(id: number, message: string) {
+  /** 뷰어가 캡처에 실패했다. 모르는(이미 끝난) id이거나 그 요청을 받지 않은 클라이언트의 답이면 무시. */
+  reject(from: Send, id: number, message: string) {
+    if (!this.isResponder(from, id)) return;
     this.fail(id, message);
+  }
+
+  /** from이 id 요청을 받은 뷰어인가 */
+  private isResponder(from: Send, id: number): boolean {
+    return this.pending.get(id)?.viewers.has(from) ?? false;
   }
 
   private fail(id: number, message: string) {

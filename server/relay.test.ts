@@ -36,7 +36,7 @@ describe("ScreenshotRelay", () => {
     const req = viewer.sent[0];
     expect(req).toMatchObject({ kind: "screenshotRequest", text: "{}" });
     expect(agent.sent).toEqual([]);
-    relay.resolve(requestId(viewer), "data:image/png;base64,AAA");
+    relay.resolve(viewer.send, requestId(viewer), "data:image/png;base64,AAA");
     expect(agent.sent).toEqual([{ kind: "screenshot", id: 7, dataUrl: "data:image/png;base64,AAA" }]);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -57,7 +57,7 @@ describe("ScreenshotRelay", () => {
     const agent = fakeClient();
     relay.addViewer(viewer.send);
     relay.request(agent.send, 7, undefined);
-    relay.reject(requestId(viewer), "캡처 실패");
+    relay.reject(viewer.send, requestId(viewer), "캡처 실패");
     expect(agent.sent).toEqual([{ kind: "screenshotFailed", id: 7, message: "캡처 실패" }]);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -71,10 +71,9 @@ describe("ScreenshotRelay", () => {
     vi.advanceTimersByTime(999);
     expect(agent.sent).toEqual([]);
     vi.advanceTimersByTime(1);
-    expect(agent.sent).toEqual([{ kind: "screenshotFailed", id: 7, message: expect.stringContaining("초") }]);
-    expect(agent.sent[0]).toMatchObject({ message: expect.stringContaining("1초") });
-    relay.resolve(requestId(viewer), "data:image/png;base64,AAA");
-    relay.reject(requestId(viewer), "늦은 실패");
+    expect(agent.sent).toEqual([{ kind: "screenshotFailed", id: 7, message: expect.stringContaining("1초") }]);
+    relay.resolve(viewer.send, requestId(viewer), "data:image/png;base64,AAA");
+    relay.reject(viewer.send, requestId(viewer), "늦은 실패");
     expect(agent.sent).toHaveLength(1);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -101,7 +100,7 @@ describe("ScreenshotRelay", () => {
     relay.request(agent.send, 7, undefined);
     relay.removeClient(agent.send);
     expect(vi.getTimerCount()).toBe(0);
-    relay.resolve(requestId(viewer), "data:image/png;base64,AAA");
+    relay.resolve(viewer.send, requestId(viewer), "data:image/png;base64,AAA");
     expect(agent.sent).toEqual([]);
     // 뷰어는 그대로 남아 다른 에이전트의 요청을 받는다
     const other = fakeClient();
@@ -120,8 +119,8 @@ describe("ScreenshotRelay", () => {
     expect(viewer1.sent).toHaveLength(1);
     expect(viewer2.sent).toHaveLength(1);
     expect(requestId(viewer1)).toBe(requestId(viewer2));
-    relay.resolve(requestId(viewer1), "data:image/png;base64,ONE");
-    relay.resolve(requestId(viewer2), "data:image/png;base64,TWO");
+    relay.resolve(viewer1.send, requestId(viewer1), "data:image/png;base64,ONE");
+    relay.resolve(viewer2.send, requestId(viewer2), "data:image/png;base64,TWO");
     expect(agent.sent).toEqual([{ kind: "screenshot", id: 7, dataUrl: "data:image/png;base64,ONE" }]);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -137,7 +136,7 @@ describe("ScreenshotRelay", () => {
     relay.removeClient(viewer1.send);
     expect(agent.sent).toEqual([]);
     expect(vi.getTimerCount()).toBe(1);
-    relay.resolve(requestId(viewer2), "data:image/png;base64,AAA");
+    relay.resolve(viewer2.send, requestId(viewer2), "data:image/png;base64,AAA");
     expect(agent.sent).toEqual([{ kind: "screenshot", id: 7, dataUrl: "data:image/png;base64,AAA" }]);
   });
 
@@ -152,7 +151,7 @@ describe("ScreenshotRelay", () => {
     expect(viewer2.sent).toEqual([]);
     relay.removeClient(viewer2.send);
     expect(agent.sent).toEqual([]);
-    relay.resolve(requestId(viewer1), "data:image/png;base64,AAA");
+    relay.resolve(viewer1.send, requestId(viewer1), "data:image/png;base64,AAA");
     expect(agent.sent).toHaveLength(1);
   });
 
@@ -167,8 +166,8 @@ describe("ScreenshotRelay", () => {
     const first = requestId(viewer, 0);
     const second = requestId(viewer, 1);
     expect(first).not.toBe(second);
-    relay.resolve(second, "data:image/png;base64,B");
-    relay.resolve(first, "data:image/png;base64,A");
+    relay.resolve(viewer.send, second, "data:image/png;base64,B");
+    relay.resolve(viewer.send, first, "data:image/png;base64,A");
     expect(agent.sent).toEqual([
       { kind: "screenshot", id: 2, dataUrl: "data:image/png;base64,B" },
       { kind: "screenshot", id: 1, dataUrl: "data:image/png;base64,A" },
@@ -176,12 +175,40 @@ describe("ScreenshotRelay", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("모르는 id의 답은 무시한다", () => {
+  it("모르는 id의 답은 무시하고 대기 중인 요청은 유지된다", () => {
     const relay = new ScreenshotRelay(1000);
+    const viewer = fakeClient();
     const agent = fakeClient();
-    expect(() => relay.resolve(999, "data:")).not.toThrow();
-    expect(() => relay.reject(999, "x")).not.toThrow();
+    relay.addViewer(viewer.send);
+    relay.request(agent.send, 7, undefined);
+    const unknownId = requestId(viewer) + 100;
+    relay.resolve(viewer.send, unknownId, "data:image/png;base64,AAA");
+    relay.reject(viewer.send, unknownId, "x");
     expect(agent.sent).toEqual([]);
+    expect(vi.getTimerCount()).toBe(1);
+    relay.resolve(viewer.send, requestId(viewer), "data:image/png;base64,AAA");
+    expect(agent.sent).toHaveLength(1);
+  });
+
+  it("요청을 받지 않은 클라이언트의 답은 무시하고 대기 중인 요청은 유지된다", () => {
+    const relay = new ScreenshotRelay(1000);
+    const viewer = fakeClient();
+    const agent = fakeClient();
+    const stranger = fakeClient();
+    relay.addViewer(viewer.send);
+    relay.request(agent.send, 7, undefined);
+    const id = requestId(viewer);
+    // 에이전트 자신, 요청 뒤에 들어온 뷰어, 아무 관계 없는 클라이언트 모두 답할 수 없다
+    relay.resolve(agent.send, id, "data:image/png;base64,AAA");
+    relay.reject(agent.send, id, "x");
+    relay.addViewer(stranger.send);
+    relay.resolve(stranger.send, id, "data:image/png;base64,AAA");
+    relay.reject(stranger.send, id, "x");
+    expect(agent.sent).toEqual([]);
+    expect(vi.getTimerCount()).toBe(1);
+    relay.resolve(viewer.send, id, "data:image/png;base64,AAA");
+    expect(agent.sent).toEqual([{ kind: "screenshot", id: 7, dataUrl: "data:image/png;base64,AAA" }]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("기본 제한 시간은 10초다", () => {

@@ -65,12 +65,13 @@ wss.on("connection", (socket) => {
     } catch {
       return;
     }
+    if (!message || typeof message !== "object") return; // null, 숫자 같은 비객체 JSON
     switch (message.kind) {
       case "hello":
         if (message.role === "viewer") {
           relay.addViewer(send);
           console.log("뷰어 연결");
-        } else {
+        } else if (message.role === "agent") {
           console.log("에이전트 연결");
         }
         break;
@@ -84,10 +85,10 @@ wss.on("connection", (socket) => {
         relay.request(send, message.id, message.text);
         break;
       case "screenshot":
-        relay.resolve(message.id, message.dataUrl);
+        relay.resolve(send, message.id, message.dataUrl);
         break;
       case "screenshotFailed":
-        relay.reject(message.id, message.message);
+        relay.reject(send, message.id, message.message);
         break;
       // 알 수 없는 kind는 무시
     }
