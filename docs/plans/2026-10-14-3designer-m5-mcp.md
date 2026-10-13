@@ -1001,3 +1001,19 @@ describe("stdio MCP 서버", () => {
 3. `screenshot` → PNG가 돌아오고 안에 플랜지가 보인다 (파일로 저장해 Read로 확인).
 4. `update_feature edge radius 50` → `features`에 커널 오류, 화면 배너에도 같은 오류.
 5. `git checkout examples/flange.3d.json`으로 되돌리고 서버 종료.
+
+---
+
+## 실행 기록 (2026-10-14)
+
+Task 1~6 모두 `m5-mcp` 브랜치에서 완료. 검증·중계·에이전트 연결·MCP 도구·stdio E2E 테스트 추가 (`server/validate.test.ts`, `server/relay.test.ts`, `server/agentConnection.test.ts`, `server/mcpServer.test.ts`, `server/mcp.e2e.test.ts`, `src/state/screenshot.test.ts`). `npx vitest run` 17 파일 / 221 테스트 통과, `npm run typecheck` 깨끗함.
+
+계획과 달라진 점:
+
+- **Task 1 (검증)**: 컷이 바디를 모두 제거하거나 겹치지 않는 교집합이면 커널이 오류 없이 빈 Shape3D를 돌려주고, 그 `boundingBox`는 "Bnd_Box is void"를 던진다. `measureVolume`을 먼저 재서 0이면 `measurements: null` + 경고("형상이 비어 있습니다 …")로 처리한다. 측정이 끝난 shape는 `shape.delete()`로 해제한다(장기 실행 MCP 프로세스의 WASM 힙 누수 방지). 치명적 커널 오류(런타임 손상)는 `features`로 감싸지 않고 던져 호출자가 재시작을 결정한다. 커널 초기화는 `src/kernel/node.ts`(`initKernelForNode`)로 모았다.
+- **Task 2 (중계)**: 스크린샷 답은 그 요청을 받은 뷰어만 할 수 있다(`isResponder`로 응답자 검증; 모르는 id·다른 클라이언트의 답은 무시). 뷰어·에이전트 모두 연결이 열릴 때 `hello`를 한 번 보낸다. 비객체 JSON(null, 숫자)은 무시한다.
+- **Task 3 (뷰어 캡처)**: 캡처 조건을 "kernelStatus가 busy 아님"에서 "평가가 끝난 모델(`meshPart`)이 요청 텍스트와 같은 모델"로 교정했다. `loadJson`/`applyEdit`가 `set({part})` 뒤에야 busy로 바꾸므로 그 사이 통지에서 옛 메시를 찍는 버그가 있었다. 비교는 `compactPart` 대신 양쪽 Zod 출력의 키를 재귀 정렬한 canonical JSON으로 한다(`parameters`의 키 순서 차이 무시). 요청한 모델의 평가가 커널 예외(featureId `"*"`)로 끝났거나 워커가 죽었으면(kernelStatus `error`) 기다리지 않고 `screenshotFailed`. 캡처 전에 rAF 한 프레임을 기다리되 숨은 탭에서는 rAF가 멈추므로 100ms 타이머로도 깨운다. 타임아웃 문구는 `get_model`로 다시 읽고 재시도하라고 안내한다.
+- **Task 4 (MCP 도구)**: `compactPart`는 쓰기 시점에만 적용한다(편집 함수 결과는 검증 전 느슨한 객체일 수 있음). `update_feature`는 `type` 변경을 거부하고(삭제 후 추가 안내), `patch.id`로 id 변경은 허용하며 응답의 `id`가 최종 id다. `set_parameter`는 없는 변수를 새로 만들 수 있고 이름은 `^[A-Za-z_][A-Za-z0-9_]*$`. `add_feature`의 `index`가 범위를 넘으면 끝에 붙인다. 파일 쓰기는 `server/atomicWrite.ts`의 `writeFileAtomic`(같은 디렉터리 임시 파일 + rename)로 하고 뷰어 저장(`projectFile.ts`)도 같은 함수를 쓴다. chokidar가 rename 뒤에도 감시를 유지하는지 확인했다. 도구마다 annotations를 달았다(`get_model`/`validate`/`screenshot` readOnly, `set_parameter`/`add_feature`/`update_feature` idempotent, `write_model`/`delete_feature` destructive). 치명적 커널 오류는 `onFatalKernelError` 훅을 부른 뒤 재시작 안내 응답을 돌려주고, 진입점은 응답이 먼저 나가도록 200ms 뒤 `exit(1)`한다(Claude Code가 다시 띄운다).
+- **Task 5 (진입점·연결)**: `AgentConnection`은 재접속으로 교체된 옛 소켓의 close를 무시하고, `send`는 connected일 때만 보낸다. Claude Code가 stdin을 닫으면 `agent.close()` 후 `exit(0)`(재접속 타이머는 unref지만 열린 소켓은 종료를 막으므로). `console.log`는 stderr로 돌려 stdio 전송을 보호한다.
+- 사전 검증 외 발견: `npx tsx -e`는 top-level await가 안 되므로 수동 확인 스크립트는 `.mts` 파일로 썼다. add_feature 예시의 chamfer `edges: "top"`은 이미 필렛된 윗면이라 커널이 실패하므로 테스트를 `distance: 100, edges: "bottom"`(확실한 커널 오류)으로 바꿨다.
+- `docs/schema.md`는 스키마 변경이 없어 손대지 않았다.
