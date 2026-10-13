@@ -77,10 +77,14 @@ export const useStore = create<State>((set, get) => {
     });
   }
 
-  /** 현재 오류를 서버에 보내 `<파일>.errors.json`에 기록하게 한다. 둘 다 빈 배열이면 성공. */
+  /**
+   * 현재 오류를 서버에 보내 `<파일>.errors.json`에 기록하게 한다. 둘 다 빈 배열이면 성공.
+   * 스키마 오류가 있으면 화면의 featureErrors는 이전 성공 모델의 것이므로 파일에는 빈 배열로 쓴다 (상태는 표시용으로 유지).
+   */
   function reportErrors() {
     const { schemaErrors, featureErrors } = get();
-    connection.send({ kind: "errors", errors: { schema: schemaErrors, features: featureErrors } });
+    const features = schemaErrors.length > 0 ? [] : featureErrors;
+    connection.send({ kind: "errors", errors: { schema: schemaErrors, features } });
   }
 
   async function evaluate(part: Part) {
@@ -111,6 +115,9 @@ export const useStore = create<State>((set, get) => {
    * 발화 시점의 get().part를 보내고, 그 사이 외부 파일 수정(file 메시지)이 도착하면
    * loadJson이 타이머를 취소한다. 즉 외부 수정이 먼저 화면에 반영되면 그쪽이 이기고,
    * 디스크와 화면이 어긋나는 일은 없다.
+   *
+   * 저장 형식: compactPart로 기본값을 빼고 키 순서를 정리한 뒤 보낸다. 서버는 2칸 들여쓰기로
+   * 다시 쓰므로 예제처럼 피처 한 줄짜리 레이아웃은 저장 후 바뀐다 (값은 그대로).
    */
   function applyEdit(next: Part) {
     set({ part: next });
@@ -123,7 +130,7 @@ export const useStore = create<State>((set, get) => {
     saveTimer = setTimeout(() => {
       saveTimer = null;
       const part = get().part;
-      if (part) connection.send({ kind: "save", part });
+      if (part) connection.send({ kind: "save", part: edit.compactPart(part) });
     }, SAVE_DEBOUNCE_MS);
   }
 
@@ -204,8 +211,9 @@ export const useStore = create<State>((set, get) => {
       if (!part) return null;
       try {
         const { resolved } = resolvePart(part);
-        const { data } = await kernel.exportSTL(resolved);
-        set({ exportError: null });
+        const { data, errors } = await kernel.exportSTL(resolved);
+        // 피처 오류가 있어도 나머지로 만든 형상을 내려받게 하되, 경고는 남긴다
+        set({ exportError: errors.length > 0 ? `피처 오류가 있는 상태로 내보냈습니다 (${errors.length}개)` : null });
         return data;
       } catch (e) {
         set({ exportError: e instanceof Error ? e.message : String(e) });

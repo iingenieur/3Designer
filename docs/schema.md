@@ -26,7 +26,7 @@
 
 ## 수식
 
-피처의 모든 **숫자 필드**는 숫자 대신 수식 문자열을 받는다. `"radius": "D/2"`, `"height": "H + 6"`, `"position": [0, 0, "T"]` 처럼 쓴다.
+피처의 모든 **숫자 필드**는 숫자 대신 수식 문자열을 받는다. `"radius": "D/2"`, `"height": "H + bossH"`, `"position": [0, 0, "T"]` 처럼 쓴다.
 
 - 변수: `parameters`의 이름
 - 연산자: `+ - * / ^ ( )`, 단항 마이너스. 우선순위는 수학 관례대로 (`-2^2` = -4, `^`는 오른쪽 결합)
@@ -62,7 +62,7 @@
 | `{ "pattern": "linear", "count", "spacing", "direction" }` | `direction`: `"X"` \| `"Y"` \| `"Z"`, 기본 `"X"` | 원본을 포함해 `count`개를 `spacing` 간격으로 `direction` 양의 방향으로 복제 |
 | `{ "pattern": "circular", "count", "diameter", "startAngle" }` | `startAngle` 기본 `0` (도) | 원점 중심, **피치원 지름** `diameter` 위에 `count`개를 등간격 배치. 원본 위치는 포함되지 않고 모두 피치원 위에 놓인다 |
 
-`count`는 반올림되며 최소 1이다.
+`count`는 1 이상의 **정수**여야 한다 (수식 결과가 정수가 아니면 피처 오류).
 
 ### 타입별 필드
 
@@ -144,7 +144,7 @@ SolidWorks 용어로: 보스 돌출 = `extrude` + `op: "add"`, 컷 돌출 = `ext
 ```
 
 - `schema`: JSON 문법 오류, 스키마 위반, id 중복. 하나라도 있으면 모델 전체가 거부되고 **마지막 성공 모델이 그대로 표시**된다. `path`는 문제 위치 (`features.3.positions`), 문법 오류면 빈 문자열
-- `features`: 피처별 오류. `stage`는 `"expression"`(수식) 또는 `"kernel"`(형상 연산). 실패한 피처는 건너뛰고 나머지는 계속 평가된다. `featureId: "*"`는 특정 피처가 아닌 커널 전체 실패
+- `features`: 피처별 오류. 스키마 오류가 있으면 `features`는 빈 배열이다 (표시 중인 모델은 이전 성공본). `stage`는 `"expression"`(수식) 또는 `"kernel"`(형상 연산). 실패한 피처는 건너뛰고 나머지는 계속 평가된다. `featureId: "*"`는 특정 피처가 아닌 커널 전체 실패
 - **둘 다 빈 배열이면 성공**
 
 ## 예제
@@ -156,12 +156,12 @@ SolidWorks 용어로: 보스 돌출 = `extrude` + `op: "add"`, 컷 돌출 = `ext
 {
   "version": 1,
   "units": "mm",
-  "parameters": { "D": 40, "H": 8, "boltPCD": 30 },
+  "parameters": { "D": 40, "H": 8, "bossH": 6, "boltPCD": 30 },
   "features": [
     { "id": "body", "type": "cylinder", "name": "본체", "radius": "D/2", "height": "H" },
-    { "id": "boss", "type": "cylinder", "name": "보스", "radius": 8, "height": "H + 6" },
-    { "id": "bore", "type": "cylinder", "name": "중심 구멍", "radius": 4, "height": "H + 6", "op": "cut" },
-    { "id": "bolts", "type": "hole", "name": "볼트 구멍", "diameter": 3.4, "depth": "through",
+    { "id": "boss", "type": "cylinder", "name": "보스", "radius": 8, "height": "H + bossH" },
+    { "id": "bore", "type": "cylinder", "name": "중심 구멍", "radius": 4, "height": "H + bossH", "op": "cut" },
+    { "id": "bolts", "type": "hole", "name": "볼트 구멍", "diameter": 3.4,
       "positions": { "pattern": "circular", "count": 4, "diameter": "boltPCD" } },
     { "id": "edge", "type": "fillet", "name": "윗면 필렛", "radius": 1, "edges": "top" }
   ]

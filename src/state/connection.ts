@@ -1,6 +1,7 @@
 import type { ClientMessage, ServerMessage } from "../../server/protocol";
 
-const URL = `ws://${location.hostname}:5174`;
+const PORT = import.meta.env.VITE_WS_PORT ?? "5174";
+const URL = `ws://${location.hostname}:${PORT}`;
 const RECONNECT_MS = 2000;
 
 export type ConnectionStatus = "connecting" | "open" | "closed";

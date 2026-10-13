@@ -18,11 +18,15 @@ if (!existsSync(path)) {
 }
 
 const file = new ProjectFile(path);
-const wss = new WebSocketServer({ port: PORT });
+const wss = new WebSocketServer({
+  port: PORT,
+  // 다른 사이트의 페이지가 로컬 파일 서버에 붙지 못하게 한다. 브라우저가 보내는 Origin만 검사하고, 없으면(비브라우저 클라이언트) 통과.
+  verifyClient: ({ origin }: { origin: string }) => !origin || origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:"),
+});
 
 wss.on("error", (e: NodeJS.ErrnoException) => {
   if (e.code === "EADDRINUSE") {
-    console.error(`포트 ${PORT}가 이미 사용 중입니다. 다른 3Designer 서버가 떠 있는지 확인하거나 PORT=<번호>로 바꾸세요.`);
+    console.error(`포트 ${PORT}가 이미 사용 중입니다. 다른 3Designer 서버가 떠 있는지 확인하거나 PORT=<번호>로 서버를, VITE_WS_PORT=<번호>로 뷰어를 실행하세요.`);
   } else {
     console.error(`서버 오류: ${e.message}`);
   }

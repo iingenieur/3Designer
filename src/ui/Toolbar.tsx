@@ -13,8 +13,15 @@ function download(data: ArrayBuffer, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
+/** `/a/b/flange.3d.json` → `flange.stl`. 파일 경로를 아직 모르면 `part.stl`. */
+export function stlFilename(filePath: string | null): string {
+  const base = filePath?.split(/[\\/]/).pop();
+  return base ? base.replace(/\.3d\.json$|\.json$/, "") + ".stl" : "part.stl";
+}
+
 export function Toolbar() {
   const exportSTL = useStore((s) => s.exportSTL);
+  const filePath = useStore((s) => s.filePath);
   const exportError = useStore((s) => s.exportError);
   const hasModel = useStore((s) => s.mesh !== null);
   const [busy, setBusy] = useState(false);
@@ -25,7 +32,7 @@ export function Toolbar() {
     setDownloadError(null);
     try {
       const data = await exportSTL();
-      if (data) download(data, "part.stl");
+      if (data) download(data, stlFilename(filePath));
     } catch (e) {
       setDownloadError(e instanceof Error ? e.message : String(e));
     } finally {

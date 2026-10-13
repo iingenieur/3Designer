@@ -9,6 +9,8 @@
 
 브라우저에서 http://localhost:5173 을 연다. 서버(파일 감시 + WebSocket)는 5174 포트를 쓴다.
 
+포트가 겹치면 `PORT=<번호> VITE_WS_PORT=<번호> npm start -- <모델>` 로 서버와 뷰어가 쓸 WebSocket 포트를 함께 바꾼다.
+
 ## 사용 흐름
 
 1. `npm start -- <모델>.3d.json` 으로 서버와 뷰어를 켠다.
