@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { measureVolume } from "replicad";
-import { initKernelForNode } from "./testSetup";
+import { initKernelForNode } from "./node";
 import { evaluateFeatures, evaluateFeature } from "./evaluate";
 import { PartSchema } from "../model/schema";
 import { resolvePart } from "../model/resolve";
