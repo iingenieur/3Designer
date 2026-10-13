@@ -86,6 +86,7 @@ describe("evaluateFeatures: extrude", () => {
       { id: "e", type: "extrude", profile: { kind: "circle", radius: 5 }, plane: "XZ", offset: 2, height: 10 },
     ]);
     expect(measureVolume(shape!)).toBeCloseTo(Math.PI * 25 * 10, 1);
+    // replicad의 XZ 평면 법선은 -Y: offset 2, height 10이면 y ∈ [-12, -2]. 방향은 묻지 않고 두께만 확인한다.
     const [[, minY], [, maxY]] = shape!.boundingBox.bounds;
     expect(Math.abs(maxY - minY)).toBeCloseTo(10, 6);
   });
@@ -163,5 +164,53 @@ describe("evaluateFeatures: hole", () => {
   it("reports an error when there is no body", () => {
     const { errors } = build([{ id: "h", type: "hole", diameter: 3, positions: [[0, 0]] }]);
     expect(errors[0]).toMatchObject({ featureId: "h", stage: "kernel" });
+  });
+});
+
+describe("evaluateFeatures: fillet/chamfer", () => {
+  it("fillets top edges only", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "f", type: "fillet", radius: 2, edges: "top" },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(7900.0589690668985, 1);
+  });
+
+  it("chamfers top edges", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "c", type: "chamfer", distance: 1, edges: "top" },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(7941.333333333332, 1);
+  });
+
+  it("fillets all edges", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "f", type: "fillet", radius: 1, edges: "all" },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeLessThan(7990); // 8000 - ε가 아니라 실제로 깎였는지 확인
+    expect(measureVolume(shape!)).toBeGreaterThan(7900);
+  });
+
+  it("fillets vertical edges", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "f", type: "fillet", radius: 3, edges: "vertical" },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - 4 * (9 - (9 * Math.PI) / 4) * 10, 1);
+  });
+
+  it("reports a kernel error for an impossible fillet and keeps the body", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [10, 10, 10] },
+      { id: "f", type: "fillet", radius: 20, edges: "all" },
+    ]);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ featureId: "f", stage: "kernel" });
+    expect(measureVolume(shape!)).toBeCloseTo(1000, 3);
   });
 });

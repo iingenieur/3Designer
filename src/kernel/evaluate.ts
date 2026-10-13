@@ -7,6 +7,7 @@ import {
   makeCylinder,
   makeSphere,
   type Drawing,
+  type EdgeFinder,
   type Shape3D,
   type Sketch,
 } from "replicad";
@@ -136,6 +137,31 @@ function applyHole(current: Shape3D | null, feature: HoleFeature): Shape3D {
   return out;
 }
 
+type EdgeFeature = Extract<ResolvedFeature, { type: "fillet" } | { type: "chamfer" }>;
+type EdgeSelector = EdgeFeature["edges"];
+
+/** 모서리 선택자를 replicad EdgeFinder 필터로 바꾼다. "all"이면 필터 없음. */
+function edgeFilter(shape: Shape3D, selector: EdgeSelector): ((e: EdgeFinder) => EdgeFinder) | undefined {
+  const [[, , zMin], [, , zMax]] = shape.boundingBox.bounds;
+  switch (selector) {
+    case "all":
+      return undefined;
+    case "top":
+      return (e) => e.inPlane("XY", zMax);
+    case "bottom":
+      return (e) => e.inPlane("XY", zMin);
+    case "vertical":
+      return (e) => e.inDirection("Z");
+  }
+}
+
+function applyEdgeFeature(current: Shape3D | null, feature: EdgeFeature): Shape3D {
+  if (!current) throw new Error(`모서리를 가공할 바디가 없습니다 (피처 "${feature.id}" 앞에 바디가 필요합니다)`);
+  const filter = edgeFilter(current, feature.edges);
+  if (feature.type === "fillet") return current.fillet(feature.radius as number, filter);
+  return current.chamfer(feature.distance as number, filter);
+}
+
 /** 커널 예외는 WebAssembly.Exception일 수 있어 Error로 가정하지 않는다. */
 function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -151,6 +177,10 @@ export function evaluateFeatures(part: ResolvedPart): EvaluateResult {
     try {
       if (feature.type === "hole") {
         current = applyHole(current, feature);
+        continue;
+      }
+      if (feature.type === "fillet" || feature.type === "chamfer") {
+        current = applyEdgeFeature(current, feature);
         continue;
       }
       const body = makeBody(feature);
