@@ -1,5 +1,4 @@
 import { PartSchema, type Part } from "../model/schema";
-import { compactPart } from "../model/edit";
 
 let capture: (() => string) | null = null;
 
@@ -14,23 +13,27 @@ export function captureScreenshot(): string {
   return capture();
 }
 
+/** 뷰어의 Part가 요청의 파일 텍스트와 같은 모델인지 판정하는 함수 */
+export type Matcher = (part: Part | null) => boolean;
+
 /**
- * 뷰어가 보여주는 part가 파일 텍스트와 같은 모델인가. 기본값·키 순서 차이는 compactPart로 지운다.
- * (UI 편집은 compactPart로 저장되고 서버가 되돌려보내지 않으므로 텍스트 비교로는 안 된다.)
- * 텍스트가 없거나 파싱이 안 되면 true (기다릴 근거가 없으니 바로 찍는다).
+ * 파일 텍스트를 한 번만 파싱해 비교 함수를 만든다 (대기 중 통지마다 다시 파싱하지 않는다).
+ * 텍스트가 없거나 파싱·스키마 검증이 안 되면 항상 true (기다릴 근거가 없으니 바로 찍는다).
+ * 양쪽 모두 Zod 출력이라 기본값이 채워져 있으므로 키 순서만 정규화해 비교한다.
+ * (UI 편집은 compactPart로 저장되고 서버가 되돌려보내지 않으므로 원문 텍스트 비교로는 안 된다.)
  */
-export function modelMatches(part: Part | null, text: string | undefined): boolean {
-  if (text === undefined) return true;
+export function prepareMatcher(text: string | undefined): Matcher {
+  if (text === undefined) return () => true;
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
   } catch {
-    return true;
+    return () => true;
   }
   const result = PartSchema.safeParse(parsed);
-  if (!result.success) return true;
-  if (!part) return false;
-  return canonical(compactPart(part)) === canonical(compactPart(result.data));
+  if (!result.success) return () => true;
+  const target = canonical(result.data);
+  return (part) => part !== null && canonical(part) === target;
 }
 
 /** 객체 키를 재귀적으로 정렬한 JSON 문자열. parameters 같은 record는 파일의 키 순서를 그대로 들고 있으므로 필요하다. */
@@ -40,6 +43,20 @@ function canonical(value: unknown): string {
       ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
       : v,
   );
+}
+
+export type CurrentState = "ready" | "wait" | "fail";
+
+/**
+ * 지금 캡처해도 되는가.
+ * - fail: 커널 워커가 죽어(재시작 포기) 화면의 메시가 어느 모델의 것인지 보장할 수 없다.
+ * - ready: 화면의 메시(meshPart)가 요청한 모델의 것이다. kernelStatus는 보지 않는다 —
+ *   set({part}) 직후 통지에서는 busy가 아직 아니고, 워커 ready 보고가 busy를 덮어쓸 수도 있어 믿을 수 없다.
+ * - wait: 아직 그 모델의 평가가 끝나지 않았다.
+ */
+export function isCurrentState(state: { meshPart: Part | null; kernelStatus: string }, matches: Matcher): CurrentState {
+  if (state.kernelStatus === "error") return "fail";
+  return matches(state.meshPart) ? "ready" : "wait";
 }
 
 /**
@@ -66,5 +83,7 @@ export function waitFor(
     unsubscribe = subscribe(() => {
       if (!settled && isCurrent()) done(true);
     });
+    // subscribe가 반환하기 전에 동기 알림으로 끝났으면 done이 구독을 풀지 못했다
+    if (settled) unsubscribe();
   });
 }

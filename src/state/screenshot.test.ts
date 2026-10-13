@@ -2,19 +2,19 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PartSchema } from "../model/schema";
-import { modelMatches, registerCapture, captureScreenshot, waitFor } from "./screenshot";
+import { prepareMatcher, isCurrentState, registerCapture, captureScreenshot, waitFor } from "./screenshot";
 
 const flangeText = readFileSync(fileURLToPath(new URL("../../examples/flange.3d.json", import.meta.url)), "utf8");
 const flange = PartSchema.parse(JSON.parse(flangeText));
 
-describe("modelMatches", () => {
+describe("prepareMatcher", () => {
   it("같은 모델이면 true", () => {
-    expect(modelMatches(flange, flangeText)).toBe(true);
+    expect(prepareMatcher(flangeText)(flange)).toBe(true);
   });
 
   it("파라미터가 다르면 false", () => {
     const changed = { ...flange, parameters: { ...flange.parameters, D: 50 } };
-    expect(modelMatches(changed, flangeText)).toBe(false);
+    expect(prepareMatcher(flangeText)(changed)).toBe(false);
   });
 
   it("피처 필드가 다르면 false", () => {
@@ -22,7 +22,12 @@ describe("modelMatches", () => {
       ...flange,
       features: flange.features.map((f) => (f.id === "edge" ? { ...f, suppressed: true } : f)),
     };
-    expect(modelMatches(changed, flangeText)).toBe(false);
+    expect(prepareMatcher(flangeText)(changed)).toBe(false);
+  });
+
+  it("피처 순서가 다르면 false", () => {
+    const changed = { ...flange, features: [...flange.features].reverse() };
+    expect(prepareMatcher(flangeText)(changed)).toBe(false);
   });
 
   it("기본값 명시 여부만 다르면 true", () => {
@@ -31,38 +36,76 @@ describe("modelMatches", () => {
       f.suppressed = false;
       if (f.op === undefined) f.op = "add";
     }
-    expect(modelMatches(flange, JSON.stringify(raw))).toBe(true);
+    expect(prepareMatcher(JSON.stringify(raw))(flange)).toBe(true);
   });
 
   it("키 순서만 다르면 true", () => {
     const raw = JSON.parse(flangeText);
     const reordered = {
-      features: raw.features.map((f: Record<string, unknown>) => {
-        const entries = Object.entries(f).reverse();
-        return Object.fromEntries(entries);
-      }),
+      features: raw.features.map((f: Record<string, unknown>) => Object.fromEntries(Object.entries(f).reverse())),
       parameters: Object.fromEntries(Object.entries(raw.parameters).reverse()),
       units: raw.units,
       version: raw.version,
     };
-    expect(modelMatches(flange, JSON.stringify(reordered))).toBe(true);
+    expect(prepareMatcher(JSON.stringify(reordered))(flange)).toBe(true);
   });
 
-  it("텍스트가 undefined면 true", () => {
-    expect(modelMatches(flange, undefined)).toBe(true);
-    expect(modelMatches(null, undefined)).toBe(true);
+  it("텍스트가 undefined면 항상 true", () => {
+    const matches = prepareMatcher(undefined);
+    expect(matches(flange)).toBe(true);
+    expect(matches(null)).toBe(true);
   });
 
   it("깨진 JSON이면 true", () => {
-    expect(modelMatches(flange, "{ not json")).toBe(true);
+    expect(prepareMatcher("{ not json")(flange)).toBe(true);
   });
 
   it("스키마에 안 맞는 텍스트면 true", () => {
-    expect(modelMatches(flange, JSON.stringify({ version: 1, units: "mm" }))).toBe(true);
+    expect(prepareMatcher(JSON.stringify({ version: 1, units: "mm" }))(flange)).toBe(true);
   });
 
   it("part가 null이면 false", () => {
-    expect(modelMatches(null, flangeText)).toBe(false);
+    expect(prepareMatcher(flangeText)(null)).toBe(false);
+  });
+
+  it("텍스트는 한 번만 파싱한다", () => {
+    const spy = vi.spyOn(JSON, "parse");
+    const matches = prepareMatcher(flangeText);
+    const after = spy.mock.calls.length;
+    matches(flange);
+    matches(flange);
+    matches(null);
+    expect(spy.mock.calls.length).toBe(after);
+    spy.mockRestore();
+  });
+});
+
+describe("isCurrentState", () => {
+  const matches = prepareMatcher(flangeText);
+  const other = { ...flange, parameters: { ...flange.parameters, D: 50 } };
+
+  it.each([
+    // 새 part만 set됐고 메시는 아직 옛 모델의 것 → wait (kernelStatus와 무관)
+    ["옛 메시, ready", { meshPart: other, kernelStatus: "ready" }, "wait"],
+    ["옛 메시, busy", { meshPart: other, kernelStatus: "busy" }, "wait"],
+    ["메시 없음, loading", { meshPart: null, kernelStatus: "loading" }, "wait"],
+    ["메시 없음, ready", { meshPart: null, kernelStatus: "ready" }, "wait"],
+    // 메시가 새 모델의 것 → ready (busy여도 그 메시는 유효하다)
+    ["새 메시, ready", { meshPart: flange, kernelStatus: "ready" }, "ready"],
+    ["새 메시, busy", { meshPart: flange, kernelStatus: "busy" }, "ready"],
+    // 워커 죽음 → 즉시 fail (메시가 맞아 보여도)
+    ["새 메시, error", { meshPart: flange, kernelStatus: "error" }, "fail"],
+    ["옛 메시, error", { meshPart: other, kernelStatus: "error" }, "fail"],
+    ["메시 없음, error", { meshPart: null, kernelStatus: "error" }, "fail"],
+  ] as const)("%s → %s", (_name, state, expected) => {
+    expect(isCurrentState(state, matches)).toBe(expected);
+  });
+
+  it("텍스트가 없으면 메시가 무엇이든 ready", () => {
+    const any = prepareMatcher(undefined);
+    expect(isCurrentState({ meshPart: null, kernelStatus: "ready" }, any)).toBe("ready");
+    expect(isCurrentState({ meshPart: other, kernelStatus: "busy" }, any)).toBe("ready");
+    expect(isCurrentState({ meshPart: flange, kernelStatus: "error" }, any)).toBe("fail");
   });
 });
 
@@ -107,19 +150,23 @@ describe("waitFor", () => {
     expect(store.listeners.size).toBe(0);
   });
 
-  it("나중에 조건이 맞으면 true가 되고 구독이 풀린다", async () => {
+  it("나중에 조건이 맞으면 true가 되고 구독과 타이머가 정리된다", async () => {
     vi.useFakeTimers();
     const store = fakeStore();
     let ok = false;
     const p = waitFor(() => ok, store.subscribe, 1000);
     expect(store.listeners.size).toBe(1);
+    expect(vi.getTimerCount()).toBe(1);
     store.notify(); // 아직 아니다
     ok = true;
     store.notify();
     await expect(p).resolves.toBe(true);
     expect(store.listeners.size).toBe(0);
-    // 타이머가 남아 있어도 다시 resolve하지 않는다
+    expect(vi.getTimerCount()).toBe(0);
+    // 타이머가 이미 지워졌으므로 시간이 더 흘러도 아무 일도 없다
     vi.advanceTimersByTime(2000);
+    expect(vi.getTimerCount()).toBe(0);
+    await expect(p).resolves.toBe(true);
   });
 
   it("시간이 넘으면 false가 되고 구독이 풀린다", async () => {
@@ -162,5 +209,28 @@ describe("waitFor", () => {
     await expect(p).resolves.toBe(true);
     expect(calls).toBe(1);
     expect(store.listeners.size).toBe(0);
+  });
+
+  it("구독 중에 동기적으로 알림이 와서 끝나면 그 구독도 푼다", async () => {
+    vi.useFakeTimers();
+    const store = fakeStore();
+    let ok = false;
+    const subscribe = (cb: () => void) => {
+      const unsubscribe = store.subscribe(cb);
+      cb(); // 구독 함수가 반환하기 전에 알림
+      return unsubscribe;
+    };
+    const p = waitFor(
+      () => {
+        const v = ok;
+        ok = true; // 첫 검사(즉시 경로)는 false, 구독 중 알림부터 true
+        return v;
+      },
+      subscribe,
+      1000,
+    );
+    await expect(p).resolves.toBe(true);
+    expect(store.listeners.size).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

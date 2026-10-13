@@ -43,6 +43,7 @@ function ScreenshotBridge() {
   useEffect(() => {
     // preserveDrawingBuffer 없이도 toDataURL 직전에 한 번 그리면 버퍼가 살아 있다
     registerCapture(() => {
+      if (gl.getContext().isContextLost()) throw new Error("WebGL 컨텍스트가 손실되었습니다.");
       gl.render(scene, camera);
       return gl.domElement.toDataURL("image/png");
     });
