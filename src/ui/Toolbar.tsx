@@ -6,28 +6,40 @@ function download(data: ArrayBuffer, filename: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  a.remove();
+  // 바로 revoke하면 일부 브라우저에서 다운로드가 시작되기 전에 URL이 사라진다
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 export function Toolbar() {
   const exportSTL = useStore((s) => s.exportSTL);
+  const exportError = useStore((s) => s.exportError);
   const hasModel = useStore((s) => s.mesh !== null);
   const [busy, setBusy] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   async function onExport() {
     setBusy(true);
+    setDownloadError(null);
     try {
       const data = await exportSTL();
       if (data) download(data, "part.stl");
+    } catch (e) {
+      setDownloadError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
   }
 
+  const error = exportError ?? downloadError;
   return (
-    <button onClick={onExport} disabled={!hasModel || busy}>
-      {busy ? "내보내는 중..." : "STL 내보내기"}
-    </button>
+    <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+      {error && <span style={{ fontSize: 12, color: "#cf1322" }}>내보내기 실패: {error}</span>}
+      <button onClick={onExport} disabled={!hasModel || busy}>
+        {busy ? "내보내는 중..." : "STL 내보내기"}
+      </button>
+    </span>
   );
 }

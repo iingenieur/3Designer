@@ -211,6 +211,7 @@ describe("evaluateFeatures: fillet/chamfer", () => {
     ]);
     expect(errors).toHaveLength(1);
     expect(errors[0]).toMatchObject({ featureId: "f", stage: "kernel" });
+    expect(errors[0].message).toContain("BRep_API");
     expect(measureVolume(shape!)).toBeCloseTo(1000, 3);
   });
 });

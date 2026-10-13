@@ -12,6 +12,7 @@ import {
   type Sketch,
 } from "replicad";
 import type { ResolvedPart, ResolvedFeature, FeatureError } from "../model/resolve";
+import { errorMessage } from "./errors";
 
 export interface EvaluateResult {
   /** 최종 바디. 바디를 만드는 피처가 하나도 없으면 null. */
@@ -160,12 +161,6 @@ function applyEdgeFeature(current: Shape3D | null, feature: EdgeFeature): Shape3
   const filter = edgeFilter(current, feature.edges);
   if (feature.type === "fillet") return current.fillet(feature.radius as number, filter);
   return current.chamfer(feature.distance as number, filter);
-}
-
-/** 커널 예외는 WebAssembly.Exception일 수 있어 Error로 가정하지 않는다. */
-function errorMessage(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return `커널 연산 실패: ${String(e)}`;
 }
 
 /** 피처를 순서대로 평가해 하나의 바디를 만든다. 실패한 피처는 건너뛰고 오류를 모은다. */

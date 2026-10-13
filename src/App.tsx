@@ -7,6 +7,7 @@ import { useStore } from "./state/store";
 export function App() {
   const loadJson = useStore((s) => s.loadJson);
   const kernelStatus = useStore((s) => s.kernelStatus);
+  const kernelError = useStore((s) => s.kernelError);
   const mesh = useStore((s) => s.mesh);
 
   useEffect(() => {
@@ -19,7 +20,11 @@ export function App() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <header style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #ddd" }}>
         <b>3Designer</b>
-        <span style={{ fontSize: 12, color: "#666" }}>커널: {kernelStatus}</span>
+        {kernelStatus === "error" ? (
+          <span style={{ fontSize: 12, color: "#cf1322" }}>커널 오류: {kernelError}</span>
+        ) : (
+          <span style={{ fontSize: 12, color: "#666" }}>커널: {kernelStatus}</span>
+        )}
         {mesh && (
           <span style={{ fontSize: 12, color: "#666" }}>
             부피 {mesh.volume.toFixed(1)} mm³ · 크기{" "}

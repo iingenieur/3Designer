@@ -3,6 +3,7 @@ import wasmUrl from "replicad-opencascadejs/wasm?url";
 import { initKernel } from "./oc";
 import { evaluateFeatures } from "./evaluate";
 import { shapeToMesh, shapeToSTL } from "./toMesh";
+import { errorMessage, isFatalKernelError } from "./errors";
 import type { WorkerRequest, WorkerResponse } from "./protocol";
 
 const ready = initKernel(wasmUrl);
@@ -27,8 +28,10 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       post({ kind: "stl", requestId: request.requestId, data, errors }, data ? [data] : []);
     }
   } catch (e) {
-    post({ kind: "failed", requestId: request.requestId, message: String(e) });
+    post({ kind: "failed", requestId: request.requestId, message: errorMessage(e), fatal: isFatalKernelError(e) });
   }
 };
 
-ready.then(() => post({ kind: "ready" }));
+ready
+  .then(() => post({ kind: "ready" }))
+  .catch((e: unknown) => post({ kind: "initFailed", message: errorMessage(e) }));

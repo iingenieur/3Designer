@@ -13,7 +13,8 @@ export function ErrorBanner() {
       ))}
       {featureErrors.map((e, i) => (
         <div key={`f${i}`}>
-          <b>피처 "{e.featureId}"</b> ({e.stage === "expression" ? "수식" : "커널"}) {e.message}
+          <b>{e.featureId === "*" ? "커널" : `피처 "${e.featureId}"`}</b> ({e.stage === "expression" ? "수식" : "커널"}){" "}
+          {e.message}
         </div>
       ))}
     </div>

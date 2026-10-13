@@ -16,6 +16,9 @@ export type WorkerRequest =
 
 export type WorkerResponse =
   | { kind: "ready" }
+  /** 커널(WASM) 초기화 자체가 실패했다. 이 워커는 어떤 요청도 처리할 수 없다. */
+  | { kind: "initFailed"; message: string }
   | { kind: "evaluated"; requestId: number; mesh: MeshData | null; errors: FeatureError[] }
   | { kind: "stl"; requestId: number; data: ArrayBuffer | null; errors: FeatureError[] }
-  | { kind: "failed"; requestId: number; message: string };
+  /** 요청 처리 실패. fatal이면 WASM 런타임이 망가진 것이라 워커를 다시 띄워야 한다. */
+  | { kind: "failed"; requestId: number; message: string; fatal: boolean };
