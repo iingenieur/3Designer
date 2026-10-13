@@ -5,6 +5,7 @@ import { resolvePart, type FeatureError } from "../model/resolve";
 import { KernelClient } from "../kernel/client";
 import type { MeshData } from "../kernel/protocol";
 import { Connection, type ConnectionStatus } from "./connection";
+import { modelMatches, captureScreenshot, waitFor } from "./screenshot";
 
 export interface SchemaError {
   path: string;
@@ -40,6 +41,8 @@ interface State {
 }
 
 let evaluationSeq = 0;
+/** 스크린샷 요청 뒤 파일의 모델이 화면에 반영되기를 기다리는 최대 시간 */
+const SCREENSHOT_WAIT_MS = 8000;
 /** 클라이언트가 마지막으로 보고한 워커 상태가 error인지. evaluate()가 busy→ready로 덮어쓰지 않게 한다. */
 let kernelFailed = false;
 
@@ -55,15 +58,26 @@ export const useStore = create<State>((set, get) => {
 
   const connection = new Connection(
     (m) => {
-      if (m.kind === "file") {
-        set({ filePath: m.path });
-        get().loadJson(m.text);
-      } else if (m.kind === "fileError") {
-        set({ schemaErrors: [{ path: "", message: m.message }] });
-        reportErrors();
+      switch (m.kind) {
+        case "file":
+          set({ filePath: m.path });
+          get().loadJson(m.text);
+          break;
+        case "fileError":
+          set({ schemaErrors: [{ path: "", message: m.message }] });
+          reportErrors();
+          break;
+        case "screenshotRequest":
+          void handleScreenshot(m.id, m.text);
+          break;
+        // screenshot / screenshotFailed는 에이전트에게만 가므로 뷰어는 받지 않는다
       }
     },
-    (status) => set({ connection: status }),
+    (status) => {
+      // 역할을 알려야 서버가 스크린샷 요청을 보낸다. socket.onopen 안에서 불리므로 바로 보낼 수 있다.
+      if (status === "open") connection.send({ kind: "hello", role: "viewer" });
+      set({ connection: status });
+    },
   );
 
   const SAVE_DEBOUNCE_MS = 300;
@@ -105,6 +119,33 @@ export const useStore = create<State>((set, get) => {
         kernelStatus: kernelFailed ? "error" : "ready",
       });
       reportErrors();
+    }
+  }
+
+  /**
+   * 파일 텍스트의 모델이 화면에 반영되고 커널이 쉬는 상태가 될 때까지 기다린다. 시간이 넘으면 false.
+   * applyEdit/loadJson은 set({part}) 뒤에 평가하므로 busy가 아닐 때라야 메시가 그 모델의 것이다.
+   * 커널이 error(워커 죽음)면 영원히 busy가 아니므로 모델만 맞으면 바로 찍는다 (마지막 메시를 보여준다).
+   * 파일에 스키마 오류가 있으면 뷰어가 마지막 성공 모델을 유지하므로 타임아웃으로 끝난다.
+   */
+  function waitUntilCurrent(text: string | undefined): Promise<boolean> {
+    const isCurrent = () => get().kernelStatus !== "busy" && modelMatches(get().part, text);
+    return waitFor(isCurrent, (cb) => useStore.subscribe(cb), SCREENSHOT_WAIT_MS);
+  }
+
+  async function handleScreenshot(id: number, text: string | undefined) {
+    if (!(await waitUntilCurrent(text))) {
+      connection.send({
+        kind: "screenshotFailed",
+        id,
+        message: "뷰어가 최신 모델을 아직 반영하지 못했습니다 (커널 오류나 스키마 오류를 확인하세요).",
+      });
+      return;
+    }
+    try {
+      connection.send({ kind: "screenshot", id, dataUrl: captureScreenshot() });
+    } catch (e) {
+      connection.send({ kind: "screenshotFailed", id, message: e instanceof Error ? e.message : String(e) });
     }
   }
 
