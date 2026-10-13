@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { PartSchema, type Part } from "../model/schema";
+import * as edit from "../model/edit";
 import { resolvePart, type FeatureError } from "../model/resolve";
 import { KernelClient } from "../kernel/client";
 import type { MeshData } from "../kernel/protocol";
@@ -24,8 +25,16 @@ interface State {
   connection: ConnectionStatus;
   /** 서버가 감시 중인 모델 파일의 절대 경로. 아직 받지 못했으면 null. */
   filePath: string | null;
+  /** 피처 트리에서 선택된 피처. 없으면 null. */
+  selectedFeatureId: string | null;
   /** 파일 내용(JSON 문자열)을 받아 검증·평가한다. */
   loadJson: (text: string) => void;
+  select: (id: string | null) => void;
+  setParameter: (name: string, value: number) => void;
+  updateFeature: (id: string, patch: edit.FeaturePatch) => void;
+  moveFeature: (id: string, toIndex: number) => void;
+  deleteFeature: (id: string) => void;
+  toggleSuppressed: (id: string) => void;
   /** STL 바이너리를 돌려준다. 실패하면 exportError를 채우고 null. */
   exportSTL: () => Promise<ArrayBuffer | null>;
 }
@@ -81,6 +90,34 @@ export const useStore = create<State>((set, get) => {
     }
   }
 
+  const SAVE_DEBOUNCE_MS = 300;
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * UI 편집을 적용한다: 즉시 재평가하고, 300ms 디바운스로 서버에 저장한다.
+   *
+   * 경쟁 조건: 편집 직후 서버에서 외부 수정(file 메시지)이 도착하면 loadJson이 part를
+   * 덮어쓰지만, 예약된 저장은 취소하지 않는다. 사용자의 편집이 파일에 기록되어 이기는 쪽이
+   * 된다(마지막 쓰기 우선). 외부 편집과 UI 편집이 수백 ms 안에 겹치는 경우에 한한다.
+   */
+  function applyEdit(next: Part) {
+    set({ part: next });
+    void evaluate(next);
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      connection.send({ kind: "save", part: next });
+    }, SAVE_DEBOUNCE_MS);
+  }
+
+  /** 현재 part에 순수 편집 함수를 적용한다. 모델이 없으면 아무것도 하지 않는다. */
+  function editPart(fn: (part: Part) => Part) {
+    const part = get().part;
+    if (!part) return;
+    const next = fn(part);
+    if (next !== part) applyEdit(next);
+  }
+
   return {
     part: null,
     mesh: null,
@@ -91,6 +128,7 @@ export const useStore = create<State>((set, get) => {
     exportError: null,
     connection: "connecting",
     filePath: null,
+    selectedFeatureId: null,
 
     loadJson(text) {
       let raw: unknown;
@@ -112,8 +150,31 @@ export const useStore = create<State>((set, get) => {
         reportErrors();
         return; // 마지막 성공 모델(part, mesh)은 유지한다
       }
-      set({ part: result.data, schemaErrors: [] });
+      // 외부에서 파일이 바뀌어도 같은 id가 남아 있으면 선택을 유지한다
+      const selected = get().selectedFeatureId;
+      const stillExists = selected !== null && result.data.features.some((f) => f.id === selected);
+      set({ part: result.data, schemaErrors: [], selectedFeatureId: stillExists ? selected : null });
       void evaluate(result.data);
+    },
+
+    select(id) {
+      set({ selectedFeatureId: id });
+    },
+    setParameter(name, value) {
+      editPart((part) => edit.setParameter(part, name, value));
+    },
+    updateFeature(id, patch) {
+      editPart((part) => edit.updateFeature(part, id, patch));
+    },
+    moveFeature(id, toIndex) {
+      editPart((part) => edit.moveFeature(part, id, toIndex));
+    },
+    deleteFeature(id) {
+      editPart((part) => edit.deleteFeature(part, id));
+      if (get().selectedFeatureId === id) set({ selectedFeatureId: null });
+    },
+    toggleSuppressed(id) {
+      editPart((part) => edit.toggleSuppressed(part, id));
     },
 
     async exportSTL() {
