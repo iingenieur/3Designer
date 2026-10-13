@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": { "D": 40, "H": 8, "boltPCD": 30 },
+  "features": [
+    { "id": "body", "type": "cylinder", "name": "본체", "radius": "D/2", "height": "H" },
+    { "id": "boss", "type": "cylinder", "name": "보스", "radius": 8, "height": "H + 6" },
+    { "id": "bore", "type": "cylinder", "name": "중심 구멍", "radius": 4, "height": "H + 6", "op": "cut" }
+  ]
+}

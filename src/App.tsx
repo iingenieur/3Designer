@@ -1,3 +1,35 @@
+import { useEffect } from "react";
+import { Viewport } from "./ui/Viewport";
+import { ErrorBanner } from "./ui/ErrorBanner";
+import { useStore } from "./state/store";
+
 export function App() {
-  return <div style={{ padding: 16 }}>3Designer</div>;
+  const loadJson = useStore((s) => s.loadJson);
+  const kernelStatus = useStore((s) => s.kernelStatus);
+  const mesh = useStore((s) => s.mesh);
+
+  useEffect(() => {
+    fetch("/examples/flange.3d.json")
+      .then((r) => r.text())
+      .then(loadJson);
+  }, [loadJson]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <header style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #ddd" }}>
+        <b>3Designer</b>
+        <span style={{ fontSize: 12, color: "#666" }}>커널: {kernelStatus}</span>
+        {mesh && (
+          <span style={{ fontSize: 12, color: "#666" }}>
+            부피 {mesh.volume.toFixed(1)} mm³ · 크기{" "}
+            {mesh.bounds[1].map((v, i) => (v - mesh.bounds[0][i]).toFixed(1)).join(" × ")} mm
+          </span>
+        )}
+      </header>
+      <ErrorBanner />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Viewport />
+      </div>
+    </div>
+  );
 }
