@@ -132,3 +132,36 @@ describe("evaluateFeatures: pattern", () => {
     expect(measureVolume(shape!)).toBeCloseTo(8000 - 4 * Math.PI * 1.7 ** 2 * 5, 2);
   });
 });
+
+describe("evaluateFeatures: hole", () => {
+  it("drills through holes at listed positions", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 40, 5] },
+      { id: "h", type: "hole", diameter: 3.4, depth: "through", positions: [[15, 0], [-15, 0], [0, 15], [0, -15]] },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(7818.41594462251, 2);
+  });
+
+  it("drills a blind hole from the top face", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [20, 20, 10] },
+      { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]] },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(4000 - Math.PI * 4 * 3, 2);
+    expect(shape!.boundingBox.bounds).toEqual([[-10, -10, 0], [10, 10, 10]]);
+  });
+
+  it("drills holes on a circular pattern", () => {
+    const { shape } = build([
+      { id: "b", type: "cylinder", radius: 20, height: 8 },
+      { id: "h", type: "hole", diameter: 3.4, positions: { pattern: "circular", count: 4, diameter: 30 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(Math.PI * 400 * 8 - 4 * Math.PI * 1.7 ** 2 * 8, 1);
+  });
+
+  it("reports an error when there is no body", () => {
+    const { errors } = build([{ id: "h", type: "hole", diameter: 3, positions: [[0, 0]] }]);
+    expect(errors[0]).toMatchObject({ featureId: "h", stage: "kernel" });
+  });
+});

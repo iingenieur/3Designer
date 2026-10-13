@@ -113,6 +113,29 @@ function combine(current: Shape3D | null, body: Shape3D, op: "add" | "cut" | "in
   }
 }
 
+type HoleFeature = Extract<ResolvedFeature, { type: "hole" }>;
+
+function holePositions(positions: HoleFeature["positions"]): [number, number][] {
+  if (Array.isArray(positions)) return positions as [number, number][];
+  return patternOffsets(positions).map(([x, y]) => [x, y]);
+}
+
+/** 현재 바디의 윗면(바운딩 박스 최대 Z)에서 아래로 구멍을 뚫는다. through면 양쪽 1mm 여유를 두고 관통한다. */
+function applyHole(current: Shape3D | null, feature: HoleFeature): Shape3D {
+  if (!current) throw new Error(`구멍을 뚫을 바디가 없습니다 (피처 "${feature.id}" 앞에 바디가 필요합니다)`);
+  const [[, , zMin], [, , zMax]] = current.boundingBox.bounds;
+  const through = feature.depth === "through";
+  const depth = through ? zMax - zMin + 2 : (feature.depth as number);
+  const z0 = through ? zMin - 1 : zMax - depth;
+  const radius = (feature.diameter as number) / 2;
+  let out = current;
+  for (const [x, y] of holePositions(feature.positions)) {
+    const tool = makeCylinder(radius, depth, [x, y, z0]);
+    out = out.cut(applyTransform(tool, feature.transform));
+  }
+  return out;
+}
+
 /** 커널 예외는 WebAssembly.Exception일 수 있어 Error로 가정하지 않는다. */
 function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -126,6 +149,10 @@ export function evaluateFeatures(part: ResolvedPart): EvaluateResult {
 
   for (const feature of part.features) {
     try {
+      if (feature.type === "hole") {
+        current = applyHole(current, feature);
+        continue;
+      }
       const body = makeBody(feature);
       if (body === null) continue; // 바디가 아닌 피처는 다음 태스크에서 처리
       const op = "op" in feature ? feature.op : "add";
