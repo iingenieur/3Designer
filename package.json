@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "serve": "tsx server/index.ts",
+    "mcp": "tsx server/mcp.ts",
     "start": "concurrently -P -n web,server -c blue,green \"vite\" \"tsx server/index.ts {@}\" --",
     "test": "vitest run",
     "test:watch": "vitest",
