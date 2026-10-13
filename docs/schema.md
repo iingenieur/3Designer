@@ -102,6 +102,8 @@ SolidWorks 용어로: 보스 돌출 = `extrude` + `op: "add"`, 컷 돌출 = `ext
 
 현재 바디를 가공한다. 앞에 바디가 없으면 오류.
 
+`hole`의 `transform`은 `position`만 적용되어 모든 구멍 위치를 함께 이동시키며, `rotation`은 무시된다. `fillet`/`chamfer`의 `transform`은 무시된다.
+
 ### `hole`
 
 | 필드 | 타입 | 기본값 | 설명 |

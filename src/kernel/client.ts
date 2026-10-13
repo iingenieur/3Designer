@@ -114,6 +114,8 @@ export class KernelClient {
   /** 워커가 못 쓰게 됐다. 대기 중인 요청을 실패시키고 상한 안에서 다시 띄운다. */
   private handleCrash(worker: WorkerLike | null, message: string) {
     if (worker !== this.worker) return;
+    // 이전 재시작을 기다리던 send()를 깨운다. 워커가 아직 없으면 send()가 다음 spawned를 다시 기다린다.
+    this.spawnedResolve();
     this.rejectPending(new Error(`${message}. 워커를 다시 시작합니다.`));
     worker?.terminate();
     this.worker = null;
@@ -156,7 +158,8 @@ export class KernelClient {
   }
 
   private async send(request: WorkerRequest): Promise<WorkerResponse> {
-    if (!this.worker && !this.closed) await this.spawned; // 재시작 대기 중이면 새 워커를 기다린다
+    // 재시작 대기 중이면 새 워커를 기다린다. 깨어났는데 워커가 없으면(재시작 시도 실패) 다음 재시작을 기다린다.
+    while (!this.worker && !this.closed) await this.spawned;
     if (this.closed) throw new Error(this.closed);
     const worker = this.worker;
     if (!worker) throw new Error(CANNOT_START);

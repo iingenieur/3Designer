@@ -31,17 +31,21 @@ class FakeWorker implements WorkerLike {
   }
 }
 
-function setup(options: { maxRespawns?: number } = {}) {
+function setup(options: { maxRespawns?: number; failSpawns?: number[] } = {}) {
   const workers: FakeWorker[] = [];
   const statuses: [KernelStatus, string | undefined][] = [];
+  const { failSpawns = [], ...clientOptions } = options;
+  let spawnCount = 0;
   const client = new KernelClient((s, m) => statuses.push([s, m]), {
     createWorker: () => {
+      spawnCount += 1;
+      if (failSpawns.includes(spawnCount)) throw new Error(`spawn ${spawnCount} failed`);
       const w = new FakeWorker();
       workers.push(w);
       return w;
     },
     backoffMs: 1,
-    ...options,
+    ...clientOptions,
   });
   return { client, workers, statuses, current: () => workers[workers.length - 1] };
 }
@@ -187,6 +191,29 @@ describe("KernelClient: crash and respawn", () => {
     expect(w.posted).toHaveLength(1);
     w.emit({ kind: "evaluated", requestId: w.lastId, mesh: null, errors: [] });
     await expect(promise).resolves.toEqual({ mesh: null, errors: [] });
+  });
+
+  it("keeps a waiting request alive when a respawn's createWorker throws, then posts to the next worker", async () => {
+    // 시도 2(첫 재시작)에서 createWorker가 던지고, 시도 3에서 성공한다.
+    const { client, workers, current } = setup({ failSpawns: [2] });
+    workers[0].crash("x");
+    const promise = client.evaluate(part);
+    await tick();
+    await tick();
+    expect(workers).toHaveLength(2); // 최초 1 + 성공한 재시작 1 (실패한 시도는 워커를 만들지 않는다)
+    const w = current();
+    expect(w.posted).toHaveLength(1);
+    w.emit({ kind: "evaluated", requestId: w.lastId, mesh: null, errors: [] });
+    await expect(promise).resolves.toEqual({ mesh: null, errors: [] });
+  });
+
+  it("rejects a waiting request instead of hanging when the respawn cap is exceeded", async () => {
+    const { client, workers } = setup({ maxRespawns: 1, failSpawns: [2] });
+    workers[0].crash("x");
+    const rejected = expect(client.evaluate(part)).rejects.toThrow("커널을 시작할 수 없습니다");
+    await tick();
+    await rejected;
+    expect(workers).toHaveLength(1);
   });
 });
 

@@ -12,7 +12,7 @@ import {
   type Sketch,
 } from "replicad";
 import type { ResolvedPart, ResolvedFeature, FeatureError } from "../model/resolve";
-import { errorMessage } from "./errors";
+import { errorMessage, isFatalKernelError } from "./errors";
 
 export interface EvaluateResult {
   /** 최종 바디. 바디를 만드는 피처가 하나도 없으면 null. */
@@ -78,7 +78,8 @@ const AXIS: Record<"X" | "Y" | "Z", Vec3> = { X: [1, 0, 0], Y: [0, 1, 0], Z: [0,
 /** 패턴 사양을 오프셋 목록으로 푼다. 패턴이 없으면 원점 하나. */
 export function patternOffsets(pattern: PatternSpec | undefined): Vec3[] {
   if (!pattern) return [[0, 0, 0]];
-  const count = Math.max(1, Math.round(pattern.count as number));
+  const count = pattern.count as number;
+  if (!Number.isInteger(count) || count < 1) throw new Error(`패턴 count는 1 이상의 정수여야 합니다 (현재: ${count})`);
   if (pattern.pattern === "linear") {
     const spacing = pattern.spacing as number;
     const [ax, ay, az] = AXIS[pattern.direction];
@@ -92,8 +93,9 @@ export function patternOffsets(pattern: PatternSpec | undefined): Vec3[] {
   });
 }
 
-/** 바디 하나를 패턴대로 복제해 하나로 합친다. translate는 원본을 소멸시키므로 매번 clone한다. */
+/** 바디 하나를 패턴대로 복제해 하나로 합친다. translate는 원본을 소멸시키므로 매번 clone한다. 패턴이 없으면 그대로 돌려준다. */
 function applyPattern(body: Shape3D, pattern: PatternSpec | undefined): Shape3D {
+  if (!pattern) return body;
   const [first, ...rest] = patternOffsets(pattern);
   let out = body.clone().translate(first);
   for (const offset of rest) out = out.fuse(body.clone().translate(offset));
@@ -122,18 +124,23 @@ function holePositions(positions: HoleFeature["positions"]): [number, number][] 
   return patternOffsets(positions).map(([x, y]) => [x, y]);
 }
 
-/** 현재 바디의 윗면(바운딩 박스 최대 Z)에서 아래로 구멍을 뚫는다. through면 양쪽 1mm 여유를 두고 관통한다. */
+/**
+ * 현재 바디의 윗면(바운딩 박스 최대 Z)에서 아래로 구멍을 뚫는다. through면 양쪽 1mm 여유를 두고 관통한다.
+ * 막힌 구멍도 공구를 윗면 위로 1mm 더 뻗어 윗면과 공구 윗면이 겹치는(coplanar) 불리언을 피한다.
+ * transform은 position만 모든 구멍 위치의 오프셋(x, y, z)으로 쓰고 rotation은 무시한다.
+ */
 function applyHole(current: Shape3D | null, feature: HoleFeature): Shape3D {
   if (!current) throw new Error(`구멍을 뚫을 바디가 없습니다 (피처 "${feature.id}" 앞에 바디가 필요합니다)`);
   const [[, , zMin], [, , zMax]] = current.boundingBox.bounds;
   const through = feature.depth === "through";
   const depth = through ? zMax - zMin + 2 : (feature.depth as number);
+  const toolHeight = through ? depth : depth + 1;
   const z0 = through ? zMin - 1 : zMax - depth;
   const radius = (feature.diameter as number) / 2;
+  const [px, py, pz] = (feature.transform?.position ?? [0, 0, 0]) as Vec3;
   let out = current;
   for (const [x, y] of holePositions(feature.positions)) {
-    const tool = makeCylinder(radius, depth, [x, y, z0]);
-    out = out.cut(applyTransform(tool, feature.transform));
+    out = out.cut(makeCylinder(radius, toolHeight, [x + px, y + py, z0 + pz]));
   }
   return out;
 }
@@ -163,28 +170,32 @@ function applyEdgeFeature(current: Shape3D | null, feature: EdgeFeature): Shape3
   return current.chamfer(feature.distance as number, filter);
 }
 
-/** 피처를 순서대로 평가해 하나의 바디를 만든다. 실패한 피처는 건너뛰고 오류를 모은다. */
-export function evaluateFeatures(part: ResolvedPart): EvaluateResult {
+/** 피처 하나를 현재 바디에 적용해 새 바디를 돌려준다. 바디를 만들지 않는 피처면 현재 바디를 그대로 돌려준다. */
+export function evaluateFeature(current: Shape3D | null, feature: ResolvedFeature): Shape3D | null {
+  if (feature.type === "hole") return applyHole(current, feature);
+  if (feature.type === "fillet" || feature.type === "chamfer") return applyEdgeFeature(current, feature);
+  const body = makeBody(feature);
+  if (body === null) return current;
+  const op = "op" in feature ? feature.op : "add";
+  const pattern = "pattern" in feature ? feature.pattern : undefined;
+  const patterned = applyPattern(body, pattern);
+  return combine(current, applyTransform(patterned, feature.transform), op, feature.id);
+}
+
+/**
+ * 피처를 순서대로 평가해 하나의 바디를 만든다. 실패한 피처는 건너뛰고 오류를 모은다.
+ * WASM 런타임이 망가진 치명적 오류는 피처 오류로 삼키지 않고 밖으로 던져 워커가 재시작되게 한다.
+ * `step`은 테스트에서 피처 평가를 바꿔 끼우는 용도다.
+ */
+export function evaluateFeatures(part: ResolvedPart, step: typeof evaluateFeature = evaluateFeature): EvaluateResult {
   let current: Shape3D | null = null;
   const errors: FeatureError[] = [];
 
   for (const feature of part.features) {
     try {
-      if (feature.type === "hole") {
-        current = applyHole(current, feature);
-        continue;
-      }
-      if (feature.type === "fillet" || feature.type === "chamfer") {
-        current = applyEdgeFeature(current, feature);
-        continue;
-      }
-      const body = makeBody(feature);
-      if (body === null) continue; // 바디가 아닌 피처는 다음 태스크에서 처리
-      const op = "op" in feature ? feature.op : "add";
-      const pattern = "pattern" in feature ? feature.pattern : undefined;
-      const patterned = applyPattern(body, pattern);
-      current = combine(current, applyTransform(patterned, feature.transform), op, feature.id);
+      current = step(current, feature);
     } catch (e) {
+      if (isFatalKernelError(e)) throw e;
       errors.push({ featureId: feature.id, stage: "kernel", message: errorMessage(e) });
     }
   }

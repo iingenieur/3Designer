@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { measureVolume } from "replicad";
 import { initKernelForNode } from "./testSetup";
-import { evaluateFeatures } from "./evaluate";
+import { evaluateFeatures, evaluateFeature } from "./evaluate";
 import { PartSchema } from "../model/schema";
 import { resolvePart } from "../model/resolve";
 
@@ -125,6 +125,16 @@ describe("evaluateFeatures: pattern", () => {
     expect(shape!.boundingBox.bounds[1][0]).toBeCloseTo(17, 6); // 15 + r
   });
 
+  it.each([2.5, 0])("rejects a non-positive-integer count (%s) with a kernel error and drops the body", (count) => {
+    const { shape, errors } = build([
+      { id: "p", type: "cylinder", radius: 2, height: 5, pattern: { pattern: "circular", count, diameter: 30 } },
+    ]);
+    expect(shape).toBeNull();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ featureId: "p", stage: "kernel" });
+    expect(errors[0].message).toBe(`패턴 count는 1 이상의 정수여야 합니다 (현재: ${count})`);
+  });
+
   it("pattern with op cut removes each instance", () => {
     const { shape } = build([
       { id: "b", type: "box", size: [40, 40, 5] },
@@ -164,6 +174,58 @@ describe("evaluateFeatures: hole", () => {
   it("reports an error when there is no body", () => {
     const { errors } = build([{ id: "h", type: "hole", diameter: 3, positions: [[0, 0]] }]);
     expect(errors[0]).toMatchObject({ featureId: "h", stage: "kernel" });
+  });
+
+  it("applies only transform.position as an offset to every hole position; rotation is ignored", () => {
+    const expectedVolume = 16000 - Math.PI * 4 * 3;
+    const shifted = build([
+      { id: "b", type: "box", size: [40, 40, 10] },
+      { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]], transform: { position: [10, 0, 0] } },
+    ]);
+    expect(shifted.errors).toEqual([]);
+    expect(measureVolume(shifted.shape!)).toBeCloseTo(expectedVolume, 2);
+    expect(shifted.shape!.boundingBox.bounds).toEqual([[-20, -20, 0], [20, 20, 10]]);
+    // 구멍이 실제로 x=10으로 옮겨졌는지: 같은 자리에 구멍을 하나 더 뚫어도 부피가 그대로여야 한다.
+    const twice = build([
+      { id: "b", type: "box", size: [40, 40, 10] },
+      { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]], transform: { position: [10, 0, 0] } },
+      { id: "h2", type: "hole", diameter: 4, depth: 3, positions: [[10, 0]] },
+    ]);
+    expect(measureVolume(twice.shape!)).toBeCloseTo(expectedVolume, 2);
+
+    // rotation은 무시된다: Z축 회전(원통엔 무의미)과 X축 회전(적용됐다면 옆으로 누운 홈이 됐을 것) 모두 결과가 같다.
+    for (const rotation of [[0, 0, 90], [90, 0, 0]]) {
+      const rotated = build([
+        { id: "b", type: "box", size: [40, 40, 10] },
+        { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]], transform: { position: [10, 0, 0], rotation } },
+      ]);
+      expect(rotated.errors).toEqual([]);
+      expect(measureVolume(rotated.shape!)).toBeCloseTo(expectedVolume, 2);
+      expect(measureVolume(rotated.shape!)).toBeCloseTo(measureVolume(shifted.shape!), 6);
+    }
+  });
+});
+
+describe("evaluateFeatures: fatal kernel errors", () => {
+  const resolved = () => {
+    const part = PartSchema.parse({ version: 1, units: "mm", parameters: {}, features: [{ id: "b", type: "box", size: [10, 10, 10] }] });
+    return resolvePart(part).resolved;
+  };
+
+  it("rethrows a WASM RuntimeError instead of recording it as a feature error", () => {
+    const step: typeof evaluateFeature = () => {
+      throw new WebAssembly.RuntimeError("Aborted(OOM)");
+    };
+    expect(() => evaluateFeatures(resolved(), step)).toThrow(WebAssembly.RuntimeError);
+  });
+
+  it("records a plain Error as a feature error and continues", () => {
+    const step: typeof evaluateFeature = () => {
+      throw new Error("boom");
+    };
+    const { shape, errors } = evaluateFeatures(resolved(), step);
+    expect(shape).toBeNull();
+    expect(errors).toEqual([{ featureId: "b", stage: "kernel", message: "boom" }]);
   });
 });
 
