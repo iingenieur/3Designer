@@ -40,9 +40,18 @@ interface State {
 }
 
 let evaluationSeq = 0;
+/** 클라이언트가 마지막으로 보고한 워커 상태가 error인지. evaluate()가 busy→ready로 덮어쓰지 않게 한다. */
+let kernelFailed = false;
 
 export const useStore = create<State>((set, get) => {
-  const kernel = new KernelClient((status, message) => set({ kernelStatus: status, kernelError: message ?? null }));
+  const kernel = new KernelClient((status, message) => {
+    kernelFailed = status === "error";
+    set({ kernelStatus: status, kernelError: message ?? null });
+    if (status !== "ready") return;
+    // 재시작에 성공했으면 마지막 평가가 메시를 못 만들었거나 커널 오류로 끝난 모델을 다시 평가한다
+    const { part, mesh, featureErrors } = get();
+    if (part && (mesh === null || featureErrors.some((e) => e.featureId === "*"))) void evaluate(part);
+  });
 
   const connection = new Connection(
     (m) => {
@@ -73,18 +82,19 @@ export const useStore = create<State>((set, get) => {
   async function evaluate(part: Part) {
     const seq = ++evaluationSeq;
     const { resolved, errors: exprErrors } = resolvePart(part);
-    set({ kernelStatus: "busy" });
+    // 워커가 죽은(또는 포기한) 상태면 busy로 바꾸지 않는다. 요청은 재시작을 기다리거나 즉시 거부된다.
+    if (!kernelFailed) set({ kernelStatus: "busy" });
     try {
       const { mesh, errors: kernelErrors } = await kernel.evaluate(resolved);
       if (seq !== evaluationSeq) return; // 더 새로운 평가가 있으면 버린다
-      set({ mesh, featureErrors: [...exprErrors, ...kernelErrors], kernelStatus: "ready" });
+      set({ mesh, featureErrors: [...exprErrors, ...kernelErrors], kernelStatus: kernelFailed ? "error" : "ready" });
       reportErrors();
     } catch (e) {
       if (seq !== evaluationSeq) return;
       set({
         featureErrors: [...exprErrors, { featureId: "*", stage: "kernel", message: e instanceof Error ? e.message : String(e) }],
         // 클라이언트가 워커 오류를 보고한 상태면 그대로 둔다
-        ...(get().kernelStatus !== "error" ? { kernelStatus: "ready" as const } : {}),
+        kernelStatus: kernelFailed ? "error" : "ready",
       });
       reportErrors();
     }
