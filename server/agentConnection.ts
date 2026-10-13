@@ -10,6 +10,15 @@ interface PendingShot {
   timer: ReturnType<typeof setTimeout>;
 }
 
+export interface AgentConnectionOptions {
+  /** 끊긴 뒤 재접속 간격(ms) */
+  reconnectMs?: number;
+  /** 스크린샷 응답 대기 한도(ms) */
+  timeoutMs?: number;
+  /** 연결됨/끊김 상태가 바뀔 때만 한 줄씩 받는다(재시도마다가 아니라). 없으면 조용히. */
+  log?: (message: string) => void;
+}
+
 /**
  * MCP 프로세스가 감시 서버(server/index.ts)에 붙는 에이전트 클라이언트.
  * 서버가 감시 중인 파일 경로를 기억하고, 뷰어 스크린샷을 요청한다. 끊기면 reconnectMs마다 재접속한다.
@@ -23,12 +32,19 @@ export class AgentConnection {
   private seq = 0;
   private pending = new Map<number, PendingShot>();
   private closed = false;
+  /** 마지막으로 로그에 알린 상태. 실패하는 재시도가 반복돼도 "끊김"은 한 번만 적는다. */
+  private wasConnected = false;
+  private readonly reconnectMs: number;
+  private readonly timeoutMs: number;
+  private readonly log: (message: string) => void;
 
   constructor(
     private readonly url: string,
-    private readonly reconnectMs = RECONNECT_MS,
-    private readonly timeoutMs = SCREENSHOT_TIMEOUT_MS,
+    { reconnectMs = RECONNECT_MS, timeoutMs = SCREENSHOT_TIMEOUT_MS, log = () => {} }: AgentConnectionOptions = {},
   ) {
+    this.reconnectMs = reconnectMs;
+    this.timeoutMs = timeoutMs;
+    this.log = log;
     this.connect();
   }
 
@@ -41,7 +57,11 @@ export class AgentConnection {
     this.reconnectTimer = null;
     const socket = new WebSocket(this.url);
     this.socket = socket;
-    socket.on("open", () => this.send({ kind: "hello", role: "agent" }));
+    socket.on("open", () => {
+      this.wasConnected = true;
+      this.log(`뷰어 서버 연결됨 (${this.url})`);
+      this.send({ kind: "hello", role: "agent" });
+    });
     socket.on("message", (raw) => {
       let m: ServerMessage;
       try {
@@ -56,6 +76,10 @@ export class AgentConnection {
     socket.on("close", () => {
       if (this.socket !== socket) return; // 이미 다른 소켓으로 넘어갔다
       this.path = null;
+      if (this.wasConnected) {
+        this.wasConnected = false;
+        this.log(this.closed ? "뷰어 서버 연결 종료" : `뷰어 서버 연결 끊김, ${this.reconnectMs / 1000}초마다 재접속 시도 (${this.url})`);
+      }
       for (const [id, p] of this.pending) {
         clearTimeout(p.timer);
         p.reject(new Error("뷰어 서버 연결이 끊겼습니다."));

@@ -10,20 +10,25 @@ import { createMcpServer } from "./mcpServer";
 import { AgentConnection } from "./agentConnection";
 
 // stdout은 MCP 전송 전용이다. 어떤 로그도 stderr로.
-console.log = (...args: unknown[]) => console.error(...args);
+console.log = console.info = console.debug = (...args: unknown[]) => console.error(...args);
 
 const PORT = Number(process.env.PORT ?? 5174);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const agent = new AgentConnection(`ws://localhost:${PORT}`);
+const agent = new AgentConnection(`ws://localhost:${PORT}`, { log: (m) => console.error(m) });
 
 const server = createMcpServer({
   defaultPath: () => agent.path,
   screenshot: (text) => agent.screenshot(text),
   schemaDoc: () => readFileSync(join(root, "docs/schema.md"), "utf8"),
   onFatalKernelError: (e) => {
-    console.error(`커널 런타임 손상, MCP 서버를 종료합니다: ${String(e)}`);
-    // 응답이 먼저 나가도록 종료를 미룬다. Claude Code가 서버를 다시 띄운다.
-    setTimeout(() => process.exit(1), 200).unref();
+    console.error(`커널 런타임 손상, MCP 서버를 종료합니다. Claude Code에서 /mcp 로 다시 연결하세요: ${String(e)}`);
+    // 응답이 먼저 나가도록 종료를 다음 틱으로 미룬다. transport.close()가 stdin을 멈추고 agent.close()로 소켓이 닫히면
+    // 남은 핸들이 없어 stdout을 다 쓴 뒤 자연 종료된다(process.exit는 쓰기 중인 stdout을 자를 수 있다).
+    setTimeout(() => {
+      agent.close();
+      void server.close();
+      process.exitCode = 1;
+    }, 0);
   },
 });
 

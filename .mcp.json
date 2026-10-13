@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "3designer": {
-      "command": "npx",
-      "args": ["tsx", "server/mcp.ts"]
+      "command": "node",
+      "args": ["--import", "tsx", "server/mcp.ts"]
     }
   }
 }

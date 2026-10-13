@@ -45,9 +45,9 @@ function accept(): Promise<Peer> {
 }
 
 /** 접속해서 hello까지 주고받은 상태의 연결을 만든다 */
-async function connect(reconnectMs = 50, timeoutMs = 1000): Promise<Peer> {
+async function connect(reconnectMs = 50, timeoutMs = 1000, log?: (m: string) => void): Promise<Peer> {
   const peerP = accept();
-  conn = new AgentConnection(url(), reconnectMs, timeoutMs);
+  conn = new AgentConnection(url(), { reconnectMs, timeoutMs, log });
   const peer = await peerP;
   expect(await peer.next()).toEqual({ kind: "hello", role: "agent" });
   return peer;
@@ -122,7 +122,7 @@ describe("AgentConnection", () => {
   });
 
   it("연결되기 전에는 screenshot이 연결 안내로 reject된다", async () => {
-    conn = new AgentConnection(url(), 50, 1000);
+    conn = new AgentConnection(url(), { reconnectMs: 50, timeoutMs: 1000 });
     expect(conn.connected).toBe(false);
     await expect(conn.screenshot("{}")).rejects.toThrow(/연결되어 있지 않습니다.*npm start/);
   });
@@ -158,12 +158,39 @@ describe("AgentConnection", () => {
   it("서버가 없으면 재접속을 반복하다가 서버가 생기면 붙는다", async () => {
     const port = (wss.address() as AddressInfo).port;
     await new Promise((r) => wss.close(r));
-    conn = new AgentConnection(`ws://localhost:${port}`, 30, 1000);
+    const log: string[] = [];
+    conn = new AgentConnection(`ws://localhost:${port}`, { reconnectMs: 30, timeoutMs: 1000, log: (m) => log.push(m) });
     await new Promise((r) => setTimeout(r, 100)); // 몇 번 실패한다 (unhandled error가 나지 않아야 한다)
     expect(conn.connected).toBe(false);
+    expect(log).toEqual([]); // 실패하는 재시도는 조용하다
     wss = new WebSocketServer({ port });
+    wss.on("error", (e) => {
+      throw e; // 같은 포트 재바인드 실패(EADDRINUSE 등)를 묻지 않는다
+    });
+    await new Promise((r) => wss.once("listening", r));
     const peer = await accept();
     expect(await peer.next()).toEqual({ kind: "hello", role: "agent" });
+    expect(log).toEqual([expect.stringContaining("연결됨")]);
+  });
+
+  it("상태가 바뀔 때만 로그 한 줄을 남긴다", async () => {
+    const log: string[] = [];
+    const peer = await connect(30, 1000, (m) => log.push(m));
+    expect(log).toEqual([expect.stringContaining("연결됨")]);
+    const again = accept();
+    peer.socket.close();
+    const peer2 = await again;
+    await peer2.next(); // 재접속 뒤 hello까지 — 끊김 로그는 그 전에 났다
+    expect(log).toEqual([
+      expect.stringContaining("연결됨"),
+      expect.stringMatching(/끊김.*재접속/),
+      expect.stringContaining("연결됨"),
+    ]);
+    const closed = new Promise((r) => peer2.socket.once("close", r));
+    conn!.close();
+    await closed;
+    await vi.waitFor(() => expect(log).toHaveLength(4));
+    expect(log[3]).toContain("종료");
   });
 
   it("close() 후에는 재접속하지 않는다", async () => {
@@ -177,7 +204,7 @@ describe("AgentConnection", () => {
   });
 
   it("접속 중(CONNECTING)에 close()해도 재접속하지 않는다", async () => {
-    conn = new AgentConnection(url(), 30, 1000);
+    conn = new AgentConnection(url(), { reconnectMs: 30, timeoutMs: 1000 });
     conn.close();
     await new Promise((r) => setTimeout(r, 120));
     expect(conn.connected).toBe(false);
