@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": { "D": 40, "H": 8, "bossH": 6, "boltPCD": 30 },
+  "features": [
+    { "id": "body", "type": "cylinder", "name": "본체", "radius": "D/2", "height": "H" },
+    { "id": "boss", "type": "cylinder", "name": "보스", "radius": 8, "height": "H + bossH" },
+    { "id": "bore", "type": "cylinder", "name": "중심 구멍", "radius": 4, "height": "H + bossH", "op": "cut" },
+    { "id": "bolts", "type": "hole", "name": "볼트 구멍", "diameter": 3.4,
+      "positions": { "pattern": "circular", "count": 4, "diameter": "boltPCD" } },
+    { "id": "edge", "type": "fillet", "name": "윗면 필렛", "radius": 1, "edges": "top" }
+  ]
+}

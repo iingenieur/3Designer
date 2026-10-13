@@ -1,0 +1,279 @@
+import { describe, it, expect, beforeAll } from "vitest";
+import { measureVolume } from "replicad";
+import { initKernelForNode } from "./testSetup";
+import { evaluateFeatures, evaluateFeature } from "./evaluate";
+import { PartSchema } from "../model/schema";
+import { resolvePart } from "../model/resolve";
+
+function build(features: unknown[], parameters: Record<string, number> = {}) {
+  const part = PartSchema.parse({ version: 1, units: "mm", parameters, features });
+  const { resolved, errors } = resolvePart(part);
+  expect(errors).toEqual([]);
+  return evaluateFeatures(resolved);
+}
+
+beforeAll(initKernelForNode);
+
+describe("evaluateFeatures: primitives", () => {
+  it("builds a cylinder", () => {
+    const { shape, errors } = build([{ id: "c", type: "cylinder", radius: 20, height: 20 }]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(Math.PI * 400 * 20, 3);
+  });
+
+  it("builds a box sitting on z=0, centered in XY", () => {
+    const { shape } = build([{ id: "b", type: "box", size: [40, 20, 10] }]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000, 3);
+    expect(shape!.boundingBox.bounds).toEqual([[-20, -10, 0], [20, 10, 10]]);
+  });
+
+  it("applies transform position", () => {
+    const { shape } = build([{ id: "b", type: "box", size: [40, 20, 10], transform: { position: [5, 0, 3] } }]);
+    expect(shape!.boundingBox.bounds).toEqual([[-15, -10, 3], [25, 10, 13]]);
+  });
+
+  it("applies transform rotation (deg about Z)", () => {
+    const { shape } = build([{ id: "b", type: "box", size: [40, 20, 10], transform: { rotation: [0, 0, 90] } }]);
+    const [[minX, minY], [maxX, maxY]] = shape!.boundingBox.bounds;
+    expect(minX).toBeCloseTo(-10, 6);
+    expect(maxX).toBeCloseTo(10, 6);
+    expect(minY).toBeCloseTo(-20, 6);
+    expect(maxY).toBeCloseTo(20, 6);
+  });
+
+  it("fuses with op add and subtracts with op cut", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "c", type: "cylinder", radius: 5, height: 10, op: "cut" },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - Math.PI * 25 * 10, 3);
+  });
+
+  it("intersects with op intersect", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [10, 10, 10] },
+      { id: "s", type: "sphere", radius: 100, op: "intersect" },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(1000, 3);
+  });
+
+  it("returns null shape and no error for an empty feature list", () => {
+    const { shape, errors } = build([]);
+    expect(shape).toBeNull();
+    expect(errors).toEqual([]);
+  });
+
+  it("reports an error when cut comes before any body", () => {
+    const { shape, errors } = build([{ id: "c", type: "cylinder", radius: 5, height: 10, op: "cut" }]);
+    expect(shape).toBeNull();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ featureId: "c", stage: "kernel" });
+  });
+});
+
+describe("evaluateFeatures: extrude", () => {
+  it("extrudes a rectangle on XY", () => {
+    const { shape, errors } = build([
+      { id: "e", type: "extrude", profile: { kind: "rect", width: 30, height: 10 }, height: 5 },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(1500, 3);
+    expect(shape!.boundingBox.bounds).toEqual([[-15, -5, 0], [15, 5, 5]]);
+  });
+
+  it("extrudes a circle on XZ with offset", () => {
+    const { shape } = build([
+      { id: "e", type: "extrude", profile: { kind: "circle", radius: 5 }, plane: "XZ", offset: 2, height: 10 },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(Math.PI * 25 * 10, 1);
+    // replicad의 XZ 평면 법선은 -Y: offset 2, height 10이면 y ∈ [-12, -2]. 방향은 묻지 않고 두께만 확인한다.
+    const [[, minY], [, maxY]] = shape!.boundingBox.bounds;
+    expect(Math.abs(maxY - minY)).toBeCloseTo(10, 6);
+  });
+
+  it("extrudes a regular polygon", () => {
+    const { shape } = build([
+      { id: "e", type: "extrude", profile: { kind: "polygon", sides: 6, radius: 10 }, height: 4 },
+    ]);
+    const hexArea = (3 * Math.sqrt(3) / 2) * 100;
+    expect(measureVolume(shape!)).toBeCloseTo(hexArea * 4, 1);
+  });
+
+  it("extrude with op cut removes material", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 40, 5] },
+      { id: "e", type: "extrude", profile: { kind: "rect", width: 10, height: 10 }, height: 5, op: "cut" },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - 500, 3);
+  });
+});
+
+describe("evaluateFeatures: pattern", () => {
+  it("linear pattern repeats a body", () => {
+    const { shape } = build([
+      { id: "p", type: "cylinder", radius: 2, height: 5, pattern: { pattern: "linear", count: 3, spacing: 10 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(3 * Math.PI * 4 * 5, 3);
+    expect(shape!.boundingBox.bounds[1][0]).toBeCloseTo(22, 6); // 마지막 원통 x = 20 + r
+  });
+
+  it("circular pattern repeats a body on a pitch circle", () => {
+    const { shape } = build([
+      { id: "p", type: "cylinder", radius: 2, height: 5, pattern: { pattern: "circular", count: 4, diameter: 30 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(4 * Math.PI * 4 * 5, 3);
+    expect(shape!.boundingBox.bounds[1][0]).toBeCloseTo(17, 6); // 15 + r
+  });
+
+  it.each([2.5, 0])("rejects a non-positive-integer count (%s) with a kernel error and drops the body", (count) => {
+    const { shape, errors } = build([
+      { id: "p", type: "cylinder", radius: 2, height: 5, pattern: { pattern: "circular", count, diameter: 30 } },
+    ]);
+    expect(shape).toBeNull();
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ featureId: "p", stage: "kernel" });
+    expect(errors[0].message).toBe(`패턴 count는 1 이상의 정수여야 합니다 (현재: ${count})`);
+  });
+
+  it("pattern with op cut removes each instance", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 40, 5] },
+      { id: "p", type: "cylinder", radius: 1.7, height: 5, op: "cut", pattern: { pattern: "circular", count: 4, diameter: 30 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - 4 * Math.PI * 1.7 ** 2 * 5, 2);
+  });
+});
+
+describe("evaluateFeatures: hole", () => {
+  it("drills through holes at listed positions", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 40, 5] },
+      { id: "h", type: "hole", diameter: 3.4, depth: "through", positions: [[15, 0], [-15, 0], [0, 15], [0, -15]] },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(7818.41594462251, 2);
+  });
+
+  it("drills a blind hole from the top face", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [20, 20, 10] },
+      { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]] },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(4000 - Math.PI * 4 * 3, 2);
+    expect(shape!.boundingBox.bounds).toEqual([[-10, -10, 0], [10, 10, 10]]);
+  });
+
+  it("drills holes on a circular pattern", () => {
+    const { shape } = build([
+      { id: "b", type: "cylinder", radius: 20, height: 8 },
+      { id: "h", type: "hole", diameter: 3.4, positions: { pattern: "circular", count: 4, diameter: 30 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(Math.PI * 400 * 8 - 4 * Math.PI * 1.7 ** 2 * 8, 1);
+  });
+
+  it("reports an error when there is no body", () => {
+    const { errors } = build([{ id: "h", type: "hole", diameter: 3, positions: [[0, 0]] }]);
+    expect(errors[0]).toMatchObject({ featureId: "h", stage: "kernel" });
+  });
+
+  it("applies only transform.position as an offset to every hole position; rotation is ignored", () => {
+    const expectedVolume = 16000 - Math.PI * 4 * 3;
+    const shifted = build([
+      { id: "b", type: "box", size: [40, 40, 10] },
+      { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]], transform: { position: [10, 0, 0] } },
+    ]);
+    expect(shifted.errors).toEqual([]);
+    expect(measureVolume(shifted.shape!)).toBeCloseTo(expectedVolume, 2);
+    expect(shifted.shape!.boundingBox.bounds).toEqual([[-20, -20, 0], [20, 20, 10]]);
+    // 구멍이 실제로 x=10으로 옮겨졌는지: 같은 자리에 구멍을 하나 더 뚫어도 부피가 그대로여야 한다.
+    const twice = build([
+      { id: "b", type: "box", size: [40, 40, 10] },
+      { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]], transform: { position: [10, 0, 0] } },
+      { id: "h2", type: "hole", diameter: 4, depth: 3, positions: [[10, 0]] },
+    ]);
+    expect(measureVolume(twice.shape!)).toBeCloseTo(expectedVolume, 2);
+
+    // rotation은 무시된다: Z축 회전(원통엔 무의미)과 X축 회전(적용됐다면 옆으로 누운 홈이 됐을 것) 모두 결과가 같다.
+    for (const rotation of [[0, 0, 90], [90, 0, 0]]) {
+      const rotated = build([
+        { id: "b", type: "box", size: [40, 40, 10] },
+        { id: "h", type: "hole", diameter: 4, depth: 3, positions: [[0, 0]], transform: { position: [10, 0, 0], rotation } },
+      ]);
+      expect(rotated.errors).toEqual([]);
+      expect(measureVolume(rotated.shape!)).toBeCloseTo(expectedVolume, 2);
+      expect(measureVolume(rotated.shape!)).toBeCloseTo(measureVolume(shifted.shape!), 6);
+    }
+  });
+});
+
+describe("evaluateFeatures: fatal kernel errors", () => {
+  const resolved = () => {
+    const part = PartSchema.parse({ version: 1, units: "mm", parameters: {}, features: [{ id: "b", type: "box", size: [10, 10, 10] }] });
+    return resolvePart(part).resolved;
+  };
+
+  it("rethrows a WASM RuntimeError instead of recording it as a feature error", () => {
+    const step: typeof evaluateFeature = () => {
+      throw new WebAssembly.RuntimeError("Aborted(OOM)");
+    };
+    expect(() => evaluateFeatures(resolved(), step)).toThrow(WebAssembly.RuntimeError);
+  });
+
+  it("records a plain Error as a feature error and continues", () => {
+    const step: typeof evaluateFeature = () => {
+      throw new Error("boom");
+    };
+    const { shape, errors } = evaluateFeatures(resolved(), step);
+    expect(shape).toBeNull();
+    expect(errors).toEqual([{ featureId: "b", stage: "kernel", message: "boom" }]);
+  });
+});
+
+describe("evaluateFeatures: fillet/chamfer", () => {
+  it("fillets top edges only", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "f", type: "fillet", radius: 2, edges: "top" },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(7900.0589690668985, 1);
+  });
+
+  it("chamfers top edges", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "c", type: "chamfer", distance: 1, edges: "top" },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(7941.333333333332, 1);
+  });
+
+  it("fillets all edges", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "f", type: "fillet", radius: 1, edges: "all" },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeLessThan(7990); // 8000 - ε가 아니라 실제로 깎였는지 확인
+    expect(measureVolume(shape!)).toBeGreaterThan(7900);
+  });
+
+  it("fillets vertical edges", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [40, 20, 10] },
+      { id: "f", type: "fillet", radius: 3, edges: "vertical" },
+    ]);
+    expect(errors).toEqual([]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - 4 * (9 - (9 * Math.PI) / 4) * 10, 1);
+  });
+
+  it("reports a kernel error for an impossible fillet and keeps the body", () => {
+    const { shape, errors } = build([
+      { id: "b", type: "box", size: [10, 10, 10] },
+      { id: "f", type: "fillet", radius: 20, edges: "all" },
+    ]);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ featureId: "f", stage: "kernel" });
+    expect(errors[0].message).toContain("BRep_API");
+    expect(measureVolume(shape!)).toBeCloseTo(1000, 3);
+  });
+});

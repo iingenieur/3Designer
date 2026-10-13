@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`examples > box-lid.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 36,
+  "size": [
+    60,
+    40,
+    5,
+  ],
+  "volume": 5601.12,
+}
+`;
+
+exports[`examples > flange.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 12,
+  "size": [
+    40,
+    40,
+    14,
+  ],
+  "volume": 10249.04,
+}
+`;
