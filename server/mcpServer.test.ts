@@ -121,6 +121,14 @@ describe("get_model", () => {
     expect(r.model.features[2].op).toBe("cut");
   });
 
+  it(".3d.json이 아닌 경로는 거부한다", async () => {
+    const other = join(dir, "notes.txt");
+    writeFileSync(other, "{}");
+    const r = await call("get_model", { path: other });
+    expect(r.isError).toBe(true);
+    expect(textOf(r)).toMatch(/\.3d\.json이어야/);
+    expect(readFileSync(other, "utf8")).toBe("{}");
+  });
   it("기본 경로가 없으면 오류", async () => {
     deps.defaultPath = () => null;
     const r = await call("get_model");

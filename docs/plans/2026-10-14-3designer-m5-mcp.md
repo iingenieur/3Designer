@@ -1006,7 +1006,7 @@ describe("stdio MCP 서버", () => {
 
 ## 실행 기록 (2026-10-14)
 
-Task 1~6 모두 `m5-mcp` 브랜치에서 완료. 검증·중계·에이전트 연결·MCP 도구·stdio E2E 테스트 추가 (`server/validate.test.ts`, `server/relay.test.ts`, `server/agentConnection.test.ts`, `server/mcpServer.test.ts`, `server/mcp.e2e.test.ts`, `src/state/screenshot.test.ts`). `npx vitest run` 17 파일 / 221 테스트 통과, `npm run typecheck` 깨끗함.
+Task 1~6 모두 `m5-mcp` 브랜치에서 완료. 검증·중계·에이전트 연결·MCP 도구·stdio E2E 테스트 추가 (`server/validate.test.ts`, `server/relay.test.ts`, `server/agentConnection.test.ts`, `server/mcpServer.test.ts`, `server/mcp.e2e.test.ts`, `src/state/screenshot.test.ts`). `npx vitest run` 17 파일 / 223 테스트 통과, `npm run typecheck` 깨끗함.
 
 계획과 달라진 점:
 
@@ -1017,3 +1017,18 @@ Task 1~6 모두 `m5-mcp` 브랜치에서 완료. 검증·중계·에이전트 �
 - **Task 5 (진입점·연결)**: `AgentConnection`은 재접속으로 교체된 옛 소켓의 close를 무시하고, `send`는 connected일 때만 보낸다. Claude Code가 stdin을 닫으면 `agent.close()` 후 `exit(0)`(재접속 타이머는 unref지만 열린 소켓은 종료를 막으므로). `console.log`/`info`/`debug`는 stderr로 돌려 stdio 전송을 보호하고, E2E 테스트는 `client.onerror`로 stdout 오염을 실제로 검출한다(오염 주입 시 실패함을 확인). `.mcp.json`은 `npx tsx` 대신 `node --import tsx`로 띄워 프로세스가 하나만 뜨고 네트워크가 필요 없다.
 - 사전 검증 외 발견: `npx tsx -e`는 top-level await가 안 되므로 수동 확인 스크립트는 `.mts` 파일로 썼다. add_feature 예시의 chamfer `edges: "top"`은 이미 필렛된 윗면이라 커널이 실패하므로 테스트를 `distance: 100, edges: "bottom"`(확실한 커널 오류)으로 바꿨다.
 - `docs/schema.md`는 스키마 변경이 없어 손대지 않았다.
+
+### 완료 확인 (Chrome, 컨트롤러 직접)
+
+`npm start`(PORT 5180) + Chrome 뷰어 + MCP 클라이언트 스크립트로 확인: `get_model`이 감시 파일 경로를 돌려줌 → `set_parameter D=50` 직후 뷰어 갱신(헤더 50×50×14) → `screenshot`이 D=50 플랜지 PNG를 돌려줌 → `update_feature edge radius 50`이 응답·errors.json·화면 배너에 같은 커널 오류 → 복구 후 errors.json 비움 → `set_parameter D=70`과 `screenshot`을 같은 세션에서 연달아 호출해도 새 모델(D=70)이 찍힘(최신 모델 반영 대기 동작) → UI에서 D를 40으로 고치면 파일 저장 후 `get_model`이 40을 읽음. 통합 검토 에이전트는 브라우저 없이 같은 도구 흐름(add/delete/validate/write_model 포함)과 "뷰어 없음" 실패 경로를 확인함.
+
+### 알려진 한계 (M5 이후)
+
+- 뷰어 탭이 한 번도 그려지지 않았으면(백그라운드 탭으로 열린 직후) R3F 캔버스가 아직 마운트되지 않아 `screenshot`이 "뷰포트가 아직 준비되지 않았습니다"로 실패한다. 탭을 한 번 보이게 하면 이후에는 백그라운드여도 된다.
+- 스크린샷은 캔버스 해상도 그대로(약 1400×2300, PNG 300KB 안팎)라 에이전트 컨텍스트를 많이 쓴다. 축소 캡처(예: 최대 800px)는 후속 과제.
+- 복잡한 모델의 브라우저 평가가 8초를 넘으면 `screenshot`이 타임아웃하고 `get_model` 후 재시도를 안내한다.
+- UI 편집(300ms 디바운스 저장)과 MCP 쓰기가 교차하면 뷰어 저장이 이긴다(last-write-wins). MCP 응답은 이미 `written: true`를 돌려준 뒤라 결과가 뒤집힐 수 있다. "편집 전 `get_model`" 규칙이 완화책.
+- 감시 서버는 떠 있는데 파일을 못 읽는 경우(`fileError`) `AgentConnection`이 경로를 비워 두므로 도구가 "서버를 먼저 켜세요"로 원인을 오도한다. `fileError` 메시지를 기억해 돌려주는 개선은 후속.
+- 심볼릭 링크 아래 경로(macOS `/tmp` → `/private/tmp`)에서는 rename 쓰기가 chokidar 이벤트를 내지 않는 것이 관찰됐다(원인 추정: 링크 경로 감시). `server/index.ts`에서 `realpathSync`로 감시하면 해결될 가능성이 높으나 미검증.
+- `.mcp.json`의 `node --import tsx server/mcp.ts`는 cwd가 저장소 루트일 때만 동작한다. 다른 폴더에서는 README대로 `npx tsx /절대경로/...`로 등록한다.
+- 치명적 커널 오류 시 자동 재시작 없음 — `/mcp`로 재연결.

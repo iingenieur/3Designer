@@ -89,6 +89,8 @@ export function createMcpServer(deps: McpDeps): McpServer {
   function resolvePath(path: string | undefined): string {
     const p = path ?? deps.defaultPath();
     if (!p) throw new Error(NO_PATH);
+    // 편집 도구가 엉뚱한 파일을 JSON으로 덮어쓰는 실수를 막는다
+    if (!p.endsWith(".3d.json")) throw new Error(`모델 파일은 .3d.json이어야 합니다: ${p}`);
     return resolve(p);
   }
 

@@ -33,7 +33,7 @@
 
 검증은 Node 안에서 OpenCascade를 직접 돌리므로 브라우저 없이도 동작한다. `screenshot`만 `npm start`로 띄운 서버와 열린 브라우저(http://localhost:5173)가 필요하다. 모델 파일 스키마는 MCP 리소스 `doc://3designer/schema`로도 제공된다.
 
-다른 폴더에서 쓰려면 Claude Code에 직접 등록한다.
+`.mcp.json`은 저장소 루트에서 Claude Code를 열 때 동작한다(`node --import tsx`가 루트의 `node_modules`를 쓴다). 다른 폴더에서 쓰려면 Claude Code에 직접 등록한다(`npx`가 `tsx`를 찾아 준다).
 
     claude mcp add 3designer -- npx tsx /절대경로/3Designer/server/mcp.ts
 
