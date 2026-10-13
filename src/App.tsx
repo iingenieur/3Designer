@@ -1,7 +1,13 @@
 import { Viewport } from "./ui/Viewport";
 import { ErrorBanner } from "./ui/ErrorBanner";
 import { Toolbar } from "./ui/Toolbar";
+import { FeatureTree } from "./ui/FeatureTree";
 import { useStore } from "./state/store";
+
+// Task 19에서 실제 인스펙터로 교체된다
+function Inspector() {
+  return null;
+}
 
 export function App() {
   const kernelStatus = useStore((s) => s.kernelStatus);
@@ -34,8 +40,14 @@ export function App() {
         <Toolbar />
       </header>
       <ErrorBanner />
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <Viewport />
+      <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Viewport />
+        </div>
+        <aside style={{ width: 320, borderLeft: "1px solid #ddd", overflow: "auto", display: "flex", flexDirection: "column" }}>
+          <FeatureTree />
+          <Inspector />
+        </aside>
       </div>
     </div>
   );
