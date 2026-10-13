@@ -58,7 +58,7 @@ export const useStore = create<State>((set, get) => {
       if (m.kind === "file") {
         set({ filePath: m.path });
         get().loadJson(m.text);
-      } else {
+      } else if (m.kind === "fileError") {
         set({ schemaErrors: [{ path: "", message: m.message }] });
         reportErrors();
       }
