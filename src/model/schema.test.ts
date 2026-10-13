@@ -59,6 +59,24 @@ describe("PartSchema", () => {
     expect(JSON.stringify(result.error?.issues)).toContain("중복");
   });
 
+  it("rejects whitespace-only expressions and trims surrounding whitespace", () => {
+    const bad = PartSchema.safeParse({
+      version: 1,
+      units: "mm",
+      features: [{ id: "a", type: "sphere", radius: "  " }],
+    });
+    expect(bad.success).toBe(false);
+
+    const part = PartSchema.parse({
+      version: 1,
+      units: "mm",
+      parameters: { D: 10 },
+      features: [{ id: "a", type: "sphere", radius: "  D/2 " }],
+    });
+    const f = part.features[0];
+    expect(f.type === "sphere" && f.radius).toBe("D/2");
+  });
+
   it("accepts expressions in numeric fields", () => {
     const part = PartSchema.parse({
       version: 1,

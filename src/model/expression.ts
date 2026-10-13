@@ -35,7 +35,7 @@ function tokenize(src: string): Token[] {
     if (/\s/.test(c)) {
       i++;
     } else if (/[0-9.]/.test(c)) {
-      const m = /^[0-9]*\.?[0-9]+(e[+-]?[0-9]+)?|^[0-9]+\.?/i.exec(src.slice(i));
+      const m = /^(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:e[+-]?[0-9]+)?/i.exec(src.slice(i));
       if (!m) throw new ExpressionError(`잘못된 숫자 "${c}"`, src);
       tokens.push({ kind: "num", value: Number(m[0]) });
       i += m[0].length;
@@ -99,10 +99,10 @@ class Parser {
   }
 
   private multiplicative(): number {
-    let left = this.power();
+    let left = this.unary();
     while (this.isOp("*") || this.isOp("/")) {
       const op = this.nextOp();
-      const right = this.power();
+      const right = this.unary();
       if (op === "/") {
         if (right === 0) this.fail("0으로 나눌 수 없습니다");
         left = left / right;
@@ -111,15 +111,6 @@ class Parser {
       }
     }
     return left;
-  }
-
-  private power(): number {
-    const base = this.unary();
-    if (this.isOp("^")) {
-      this.next();
-      return Math.pow(base, this.power());
-    }
-    return base;
   }
 
   private unary(): number {
@@ -131,7 +122,17 @@ class Parser {
       this.next();
       return this.unary();
     }
-    return this.primary();
+    return this.power();
+  }
+
+  /** 단항 마이너스보다 ^가 먼저 묶인다: -2^2 = -4 (Fusion/Onshape/Python 관례). 우결합: 2^3^2 = 512, 지수 자리에는 2^-1 처럼 단항 허용. */
+  private power(): number {
+    const base = this.primary();
+    if (this.isOp("^")) {
+      this.next();
+      return Math.pow(base, this.unary());
+    }
+    return base;
   }
 
   private primary(): number {

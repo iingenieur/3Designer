@@ -52,6 +52,49 @@ describe("resolvePart", () => {
     expect(errors[0].message).toContain('알 수 없는 변수 "R"');
   });
 
+  it("resolves nested pattern and position expressions while preserving enum strings", () => {
+    const part = PartSchema.parse({
+      version: 1,
+      units: "mm",
+      parameters: { N: 6, D: 40 },
+      features: [
+        {
+          id: "c",
+          type: "cylinder",
+          radius: 1,
+          height: 1,
+          pattern: { pattern: "circular", count: "N", diameter: "D*2", startAngle: "D/4" },
+        },
+        {
+          id: "h1",
+          type: "hole",
+          diameter: 1,
+          positions: [
+            ["D/2", "-D/2"],
+            [0, "1e1"],
+          ],
+        },
+        { id: "h2", type: "hole", diameter: 1, positions: { pattern: "linear", count: 3, spacing: "D/4" } },
+        { id: "b", type: "box", name: "본체", size: [1, 1, 1] },
+      ],
+    });
+    const { resolved, errors } = resolvePart(part);
+    expect(errors).toEqual([]);
+    expect(resolved.features[0]).toMatchObject({
+      pattern: { pattern: "circular", count: 6, diameter: 80, startAngle: 10 },
+    });
+    expect(resolved.features[1]).toMatchObject({
+      positions: [
+        [20, -20],
+        [0, 10],
+      ],
+    });
+    expect(resolved.features[2]).toMatchObject({
+      positions: { pattern: "linear", count: 3, spacing: 10, direction: "X" },
+    });
+    expect(resolved.features[3]).toMatchObject({ type: "box", name: "본체" });
+  });
+
   it("skips suppressed features", () => {
     const part = PartSchema.parse({
       version: 1,

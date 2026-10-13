@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** 숫자 또는 수식 문자열 ("D/2", "H - 2") */
-export const Num = z.union([z.number(), z.string().min(1)]);
+export const Num = z.union([z.number(), z.string().trim().min(1)]);
 export type Num = z.infer<typeof Num>;
 
 export const Vec3 = z.tuple([Num, Num, Num]);

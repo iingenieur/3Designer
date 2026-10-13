@@ -12,6 +12,21 @@ describe("evaluate", () => {
     expect(evaluate("2 ^ 3", {})).toBe(8);
   });
 
+  it("parses number literal forms", () => {
+    expect(evaluate("1e3", {})).toBe(1000);
+    expect(evaluate(".5", {})).toBe(0.5);
+    expect(evaluate("1E-2", {})).toBe(0.01);
+    expect(evaluate("2.", {})).toBe(2);
+    expect(() => evaluate(".", {})).toThrow(ExpressionError);
+  });
+
+  it("binds unary minus looser than power (CAD convention)", () => {
+    expect(evaluate("-2^2", {})).toBe(-4);
+    expect(evaluate("(-2)^2", {})).toBe(4);
+    expect(evaluate("2^-1", {})).toBe(0.5);
+    expect(evaluate("2^3^2", {})).toBe(512);
+  });
+
   it("resolves variables", () => {
     expect(evaluate("D/2", vars)).toBe(20);
     expect(evaluate("H - 2", vars)).toBe(18);
@@ -36,13 +51,29 @@ describe("evaluate", () => {
     expect(() => evaluate("toString(1)", {})).toThrow(ExpressionError);
   });
 
+  it("throws on unknown function", () => {
+    expect(() => evaluate("foo(1)", {})).toThrow(ExpressionError);
+    expect(() => evaluate("foo(1)", {})).toThrow('알 수 없는 함수 "foo"');
+  });
+
   it("throws on division by zero", () => {
     expect(() => evaluate("1 / 0", {})).toThrow(ExpressionError);
+  });
+
+  it("throws on non-finite result", () => {
+    expect(() => evaluate("10^400", {})).toThrow(ExpressionError);
   });
 
   it("throws on syntax error", () => {
     expect(() => evaluate("2 +", {})).toThrow(ExpressionError);
     expect(() => evaluate("2 2", {})).toThrow(ExpressionError);
     expect(() => evaluate("", {})).toThrow(ExpressionError);
+    expect(() => evaluate("(1", {})).toThrow(ExpressionError);
+    expect(() => evaluate("1)", {})).toThrow(ExpressionError);
+  });
+
+  it("throws on invalid character", () => {
+    expect(() => evaluate("$", {})).toThrow(ExpressionError);
+    expect(() => evaluate("1 $ 2", {})).toThrow('잘못된 문자 "$"');
   });
 });

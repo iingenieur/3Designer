@@ -2,6 +2,7 @@ import type { Part, Feature } from "./schema";
 import { evaluate, ExpressionError } from "./expression";
 
 /** 수식이 아니라 그대로 두어야 하는 문자열 필드 */
+// schema.ts에 문자열 enum 필드를 추가하면 여기에도 반드시 추가한다. 빠지면 그 값이 수식으로 평가되어 모든 피처가 실패한다.
 const ENUM_KEYS = new Set(["id", "name", "type", "op", "edges", "plane", "kind", "pattern", "direction", "units"]);
 
 export interface FeatureError {
