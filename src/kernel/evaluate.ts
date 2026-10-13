@@ -69,6 +69,35 @@ function makeBody(feature: ResolvedFeature): Shape3D | null {
   }
 }
 
+type PatternSpec = NonNullable<Extract<ResolvedFeature, { type: "box" }>["pattern"]>;
+
+const AXIS: Record<"X" | "Y" | "Z", Vec3> = { X: [1, 0, 0], Y: [0, 1, 0], Z: [0, 0, 1] };
+
+/** 패턴 사양을 오프셋 목록으로 푼다. 패턴이 없으면 원점 하나. */
+export function patternOffsets(pattern: PatternSpec | undefined): Vec3[] {
+  if (!pattern) return [[0, 0, 0]];
+  const count = Math.max(1, Math.round(pattern.count as number));
+  if (pattern.pattern === "linear") {
+    const spacing = pattern.spacing as number;
+    const [ax, ay, az] = AXIS[pattern.direction];
+    return Array.from({ length: count }, (_, i) => [ax * spacing * i, ay * spacing * i, az * spacing * i]);
+  }
+  const r = (pattern.diameter as number) / 2;
+  const start = ((pattern.startAngle as number) * Math.PI) / 180;
+  return Array.from({ length: count }, (_, i) => {
+    const a = start + (2 * Math.PI * i) / count;
+    return [r * Math.cos(a), r * Math.sin(a), 0];
+  });
+}
+
+/** 바디 하나를 패턴대로 복제해 하나로 합친다. translate는 원본을 소멸시키므로 매번 clone한다. */
+function applyPattern(body: Shape3D, pattern: PatternSpec | undefined): Shape3D {
+  const [first, ...rest] = patternOffsets(pattern);
+  let out = body.clone().translate(first);
+  for (const offset of rest) out = out.fuse(body.clone().translate(offset));
+  return out;
+}
+
 function combine(current: Shape3D | null, body: Shape3D, op: "add" | "cut" | "intersect", featureId: string): Shape3D {
   if (current === null) {
     if (op === "add") return body;
@@ -100,7 +129,9 @@ export function evaluateFeatures(part: ResolvedPart): EvaluateResult {
       const body = makeBody(feature);
       if (body === null) continue; // 바디가 아닌 피처는 다음 태스크에서 처리
       const op = "op" in feature ? feature.op : "add";
-      current = combine(current, applyTransform(body, feature.transform), op, feature.id);
+      const pattern = "pattern" in feature ? feature.pattern : undefined;
+      const patterned = applyPattern(body, pattern);
+      current = combine(current, applyTransform(patterned, feature.transform), op, feature.id);
     } catch (e) {
       errors.push({ featureId: feature.id, stage: "kernel", message: errorMessage(e) });
     }

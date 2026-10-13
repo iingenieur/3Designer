@@ -106,3 +106,29 @@ describe("evaluateFeatures: extrude", () => {
     expect(measureVolume(shape!)).toBeCloseTo(8000 - 500, 3);
   });
 });
+
+describe("evaluateFeatures: pattern", () => {
+  it("linear pattern repeats a body", () => {
+    const { shape } = build([
+      { id: "p", type: "cylinder", radius: 2, height: 5, pattern: { pattern: "linear", count: 3, spacing: 10 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(3 * Math.PI * 4 * 5, 3);
+    expect(shape!.boundingBox.bounds[1][0]).toBeCloseTo(22, 6); // 마지막 원통 x = 20 + r
+  });
+
+  it("circular pattern repeats a body on a pitch circle", () => {
+    const { shape } = build([
+      { id: "p", type: "cylinder", radius: 2, height: 5, pattern: { pattern: "circular", count: 4, diameter: 30 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(4 * Math.PI * 4 * 5, 3);
+    expect(shape!.boundingBox.bounds[1][0]).toBeCloseTo(17, 6); // 15 + r
+  });
+
+  it("pattern with op cut removes each instance", () => {
+    const { shape } = build([
+      { id: "b", type: "box", size: [40, 40, 5] },
+      { id: "p", type: "cylinder", radius: 1.7, height: 5, op: "cut", pattern: { pattern: "circular", count: 4, diameter: 30 } },
+    ]);
+    expect(measureVolume(shape!)).toBeCloseTo(8000 - 4 * Math.PI * 1.7 ** 2 * 5, 2);
+  });
+});
