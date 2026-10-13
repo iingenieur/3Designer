@@ -83,29 +83,39 @@ describe("prepareMatcher", () => {
 describe("isCurrentState", () => {
   const matches = prepareMatcher(flangeText);
   const other = { ...flange, parameters: { ...flange.parameters, D: 50 } };
+  const none: { featureId: string }[] = [];
+  const kernelFail = [{ featureId: "*" }];
+  const featureFail = [{ featureId: "edge" }];
 
   it.each([
     // 새 part만 set됐고 메시는 아직 옛 모델의 것 → wait (kernelStatus와 무관)
-    ["옛 메시, ready", { meshPart: other, kernelStatus: "ready" }, "wait"],
-    ["옛 메시, busy", { meshPart: other, kernelStatus: "busy" }, "wait"],
-    ["메시 없음, loading", { meshPart: null, kernelStatus: "loading" }, "wait"],
-    ["메시 없음, ready", { meshPart: null, kernelStatus: "ready" }, "wait"],
+    ["옛 메시, ready", { meshPart: other, kernelStatus: "ready", featureErrors: none }, "wait"],
+    ["옛 메시, busy", { meshPart: other, kernelStatus: "busy", featureErrors: none }, "wait"],
+    ["메시 없음, loading", { meshPart: null, kernelStatus: "loading", featureErrors: none }, "wait"],
+    ["메시 없음, ready", { meshPart: null, kernelStatus: "ready", featureErrors: none }, "wait"],
     // 메시가 새 모델의 것 → ready (busy여도 그 메시는 유효하다)
-    ["새 메시, ready", { meshPart: flange, kernelStatus: "ready" }, "ready"],
-    ["새 메시, busy", { meshPart: flange, kernelStatus: "busy" }, "ready"],
+    ["새 메시, ready", { meshPart: flange, kernelStatus: "ready", featureErrors: none }, "ready"],
+    ["새 메시, busy", { meshPart: flange, kernelStatus: "busy", featureErrors: none }, "ready"],
+    // 피처 하나의 오류는 나머지로 만든 메시가 있으므로 ready
+    ["새 메시, 피처 오류", { meshPart: flange, kernelStatus: "ready", featureErrors: featureFail }, "ready"],
+    // 커널 예외(featureId "*")로 끝난 평가: 메시는 옛 것이 남아 있으므로 fail
+    ["새 메시, 커널 예외", { meshPart: flange, kernelStatus: "ready", featureErrors: kernelFail }, "fail"],
+    // 옛 평가의 커널 예외는 새 평가가 끝나면 사라지므로 wait
+    ["옛 메시, 커널 예외", { meshPart: other, kernelStatus: "ready", featureErrors: kernelFail }, "wait"],
     // 워커 죽음 → 즉시 fail (메시가 맞아 보여도)
-    ["새 메시, error", { meshPart: flange, kernelStatus: "error" }, "fail"],
-    ["옛 메시, error", { meshPart: other, kernelStatus: "error" }, "fail"],
-    ["메시 없음, error", { meshPart: null, kernelStatus: "error" }, "fail"],
+    ["새 메시, error", { meshPart: flange, kernelStatus: "error", featureErrors: none }, "fail"],
+    ["옛 메시, error", { meshPart: other, kernelStatus: "error", featureErrors: none }, "fail"],
+    ["메시 없음, error", { meshPart: null, kernelStatus: "error", featureErrors: none }, "fail"],
   ] as const)("%s → %s", (_name, state, expected) => {
     expect(isCurrentState(state, matches)).toBe(expected);
   });
 
-  it("텍스트가 없으면 메시가 무엇이든 ready", () => {
+  it("텍스트가 없으면 메시가 무엇이든 ready (커널 오류는 예외)", () => {
     const any = prepareMatcher(undefined);
-    expect(isCurrentState({ meshPart: null, kernelStatus: "ready" }, any)).toBe("ready");
-    expect(isCurrentState({ meshPart: other, kernelStatus: "busy" }, any)).toBe("ready");
-    expect(isCurrentState({ meshPart: flange, kernelStatus: "error" }, any)).toBe("fail");
+    expect(isCurrentState({ meshPart: null, kernelStatus: "ready", featureErrors: none }, any)).toBe("ready");
+    expect(isCurrentState({ meshPart: other, kernelStatus: "busy", featureErrors: none }, any)).toBe("ready");
+    expect(isCurrentState({ meshPart: flange, kernelStatus: "error", featureErrors: none }, any)).toBe("fail");
+    expect(isCurrentState({ meshPart: flange, kernelStatus: "ready", featureErrors: kernelFail }, any)).toBe("fail");
   });
 });
 

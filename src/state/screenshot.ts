@@ -47,16 +47,30 @@ function canonical(value: unknown): string {
 
 export type CurrentState = "ready" | "wait" | "fail";
 
+/** isCurrentState가 보는 스토어 조각 */
+export interface ScreenshotState {
+  meshPart: Part | null;
+  kernelStatus: string;
+  featureErrors: { featureId: string }[];
+}
+
+/** 마지막 평가가 커널 예외로 끝났는가 (evaluate의 catch는 featureId "*"로 기록한다). 이때 mesh는 이전 모델의 것이 남아 있다. */
+export function hasKernelFailure(featureErrors: { featureId: string }[]): boolean {
+  return featureErrors.some((e) => e.featureId === "*");
+}
+
 /**
  * 지금 캡처해도 되는가.
- * - fail: 커널 워커가 죽어(재시작 포기) 화면의 메시가 어느 모델의 것인지 보장할 수 없다.
+ * - fail: 커널 워커가 죽어(재시작 포기) 화면의 메시가 어느 모델의 것인지 보장할 수 없거나,
+ *   요청한 모델의 평가가 커널 예외로 끝나 화면에 옛 메시가 남아 있다.
  * - ready: 화면의 메시(meshPart)가 요청한 모델의 것이다. kernelStatus는 보지 않는다 —
  *   set({part}) 직후 통지에서는 busy가 아직 아니고, 워커 ready 보고가 busy를 덮어쓸 수도 있어 믿을 수 없다.
- * - wait: 아직 그 모델의 평가가 끝나지 않았다.
+ * - wait: 아직 그 모델의 평가가 끝나지 않았다 (옛 평가의 커널 예외도 새 평가가 지우므로 기다린다).
  */
-export function isCurrentState(state: { meshPart: Part | null; kernelStatus: string }, matches: Matcher): CurrentState {
+export function isCurrentState(state: ScreenshotState, matches: Matcher): CurrentState {
   if (state.kernelStatus === "error") return "fail";
-  return matches(state.meshPart) ? "ready" : "wait";
+  if (!matches(state.meshPart)) return "wait";
+  return hasKernelFailure(state.featureErrors) ? "fail" : "ready";
 }
 
 /**
