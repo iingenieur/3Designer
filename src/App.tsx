@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Viewport } from "./ui/Viewport";
 import { ErrorBanner } from "./ui/ErrorBanner";
+import { Toolbar } from "./ui/Toolbar";
 import { useStore } from "./state/store";
 
 export function App() {
@@ -25,6 +26,8 @@ export function App() {
             {mesh.bounds[1].map((v, i) => (v - mesh.bounds[0][i]).toFixed(1)).join(" × ")} mm
           </span>
         )}
+        <span style={{ flex: 1 }} />
+        <Toolbar />
       </header>
       <ErrorBanner />
       <div style={{ flex: 1, minHeight: 0 }}>
