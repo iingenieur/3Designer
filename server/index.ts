@@ -1,24 +1,27 @@
-import { resolve } from "node:path";
-import { existsSync } from "node:fs";
-import { watch } from "chokidar";
+import { dirname } from "node:path";
+import { watch, type FSWatcher } from "chokidar";
 import { WebSocketServer, WebSocket } from "ws";
 import { ProjectFile } from "./projectFile";
 import { ScreenshotRelay, type Send } from "./relay";
+import { listModels, resolveModel, pickInitialModel } from "./modelDir";
 import type { ClientMessage, ServerMessage } from "./protocol";
 
 const PORT = Number(process.env.PORT ?? 5174);
 const arg = process.argv[2];
 if (!arg) {
-  console.error("사용법: npm run serve -- <모델파일.3d.json>");
+  console.error("사용법: npm run serve -- <모델파일.3d.json 또는 모델 폴더>");
   process.exit(1);
 }
-const path = resolve(arg);
-if (!existsSync(path)) {
-  console.error(`파일이 없습니다: ${path}`);
+const initial = pickInitialModel(arg);
+if (!initial) {
+  console.error(`모델 파일이 없습니다: ${arg} (*.3d.json 파일 또는 그런 파일이 든 폴더를 주세요)`);
   process.exit(1);
 }
 
-const file = new ProjectFile(path);
+/** 모델 폴더. 뷰어는 이 폴더 안의 모델만 골라 열 수 있다. */
+const dir = dirname(initial);
+let file = new ProjectFile(initial);
+let fileWatcher: FSWatcher | null = null;
 const relay = new ScreenshotRelay();
 const wss = new WebSocketServer({
   port: PORT,
@@ -44,12 +47,40 @@ function broadcast(message: ServerMessage) {
 function sendFile(to?: Send) {
   let message: ServerMessage;
   try {
-    message = { kind: "file", path, text: file.read() };
+    message = { kind: "file", path: file.path, text: file.read() };
   } catch (e) {
     message = { kind: "fileError", message: String(e) };
   }
   if (to) to(message);
   else broadcast(message);
+}
+
+function sendFiles(to?: Send) {
+  const message: ServerMessage = { kind: "files", dir, files: listModels(dir) };
+  if (to) to(message);
+  else broadcast(message);
+}
+
+/** 디스크 변경을 브라우저에 전달한다. 에디터가 파일을 통째로 바꿔치기하면 change 대신 unlink+add가 올 수 있어 add도 듣는다. */
+function onDiskChange() {
+  let text: string;
+  try {
+    text = file.read();
+  } catch {
+    return;
+  }
+  if (file.isOwnContent(text)) return; // UI 편집이 되돌아온 것
+  console.log("파일 변경 감지 → 브라우저에 전송");
+  broadcast({ kind: "file", path: file.path, text });
+}
+
+/** 감시 대상을 바꾼다. 이전 파일의 감시를 멈추고 새 파일을 감시하며, 모두에게 새 내용을 보낸다. */
+function openFile(path: string) {
+  void fileWatcher?.close();
+  file = new ProjectFile(path);
+  fileWatcher = watch(path, { ignoreInitial: true, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 } })
+    .on("change", onDiskChange)
+    .on("add", onDiskChange);
 }
 
 wss.on("connection", (socket) => {
@@ -58,6 +89,7 @@ wss.on("connection", (socket) => {
     if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(m));
   };
   sendFile(send);
+  sendFiles(send);
   socket.on("message", (raw) => {
     let message: ClientMessage;
     try {
@@ -81,6 +113,18 @@ wss.on("connection", (socket) => {
       case "errors":
         file.writeErrors(message.errors);
         break;
+      case "open": {
+        const path = typeof message.file === "string" ? resolveModel(dir, message.file) : null;
+        if (!path) {
+          console.log(`열 수 없는 모델 이름: ${String(message.file)}`);
+          break;
+        }
+        if (path === file.path) break;
+        openFile(path);
+        console.log(`모델 전환: ${path}`);
+        sendFile();
+        break;
+      }
       case "screenshotRequest":
         relay.request(send, message.id, message.text);
         break;
@@ -96,23 +140,13 @@ wss.on("connection", (socket) => {
   socket.on("close", () => relay.removeClient(send));
 });
 
-/** 디스크 변경을 브라우저에 전달한다. 에디터가 파일을 통째로 바꿔치기하면 change 대신 unlink+add가 올 수 있어 add도 듣는다. */
-function onDiskChange() {
-  let text: string;
-  try {
-    text = file.read();
-  } catch {
-    return;
-  }
-  if (file.isOwnContent(text)) return; // UI 편집이 되돌아온 것
-  console.log("파일 변경 감지 → 브라우저에 전송");
-  broadcast({ kind: "file", path, text });
-}
+openFile(initial);
 
-watch(path, { ignoreInitial: true, awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 } })
-  .on("change", onDiskChange)
-  .on("add", onDiskChange);
+// 폴더에 모델이 생기거나 사라지면 목록을 다시 보낸다. 내용 변경은 파일 감시가 맡는다.
+watch(dir, { ignoreInitial: true, depth: 0 })
+  .on("add", (p) => p.endsWith(".3d.json") && sendFiles())
+  .on("unlink", (p) => p.endsWith(".3d.json") && sendFiles());
 
 wss.on("listening", () => {
-  console.log(`3Designer 서버: ws://localhost:${PORT}  감시 중: ${path}`);
+  console.log(`3Designer 서버: ws://localhost:${PORT}  감시 중: ${file.path}  (폴더 모델 ${listModels(dir).length}개)`);
 });

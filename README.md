@@ -6,14 +6,15 @@
 
     npm install
     npm start -- examples/flange.3d.json
+    npm start -- examples/            # 폴더를 주면 첫 모델을 연다
 
-브라우저에서 http://localhost:5173 을 연다. 서버(파일 감시 + WebSocket)는 5174 포트를 쓴다.
+브라우저에서 http://localhost:5173 을 연다. 서버(파일 감시 + WebSocket)는 5174 포트를 쓴다. 헤더의 드롭다운에 같은 폴더의 `*.3d.json`이 모두 뜨고, 고르면 서버가 감시 대상을 바꾼다(MCP 도구의 기본 `path`도 함께 바뀐다).
 
 포트가 겹치면 `PORT=<번호> VITE_WS_PORT=<번호> npm start -- <모델>` 로 서버와 뷰어가 쓸 WebSocket 포트를 함께 바꾼다.
 
 ## 사용 흐름
 
-1. `npm start -- <모델>.3d.json` 으로 서버와 뷰어를 켠다.
+1. `npm start -- <모델>.3d.json` (또는 모델 폴더) 으로 서버와 뷰어를 켠다. 같은 폴더의 다른 모델은 헤더 드롭다운으로 바꾼다.
 2. 같은 폴더에서 Claude Code를 열고 "볼트 구멍을 6개로 바꿔줘"처럼 요청한다. Claude Code가 파일을 편집하면 뷰어가 즉시 반영한다. 오류는 화면 배너와 `<모델>.errors.json`에 기록되어 Claude Code가 스스로 고칠 수 있다.
 3. 오른쪽 패널에서 파라미터·치수를 직접 고치고, 피처 순서를 바꾸거나 끄거나 지울 수 있다. 고친 내용은 파일에 저장되어 다음 Claude Code 요청에 반영된다.
 4. "STL 내보내기"로 슬라이서에 넘긴다.
@@ -50,7 +51,7 @@ box · cylinder · sphere · extrude(rect/circle/polygon, XY/XZ/YZ) · 선형/�
 - `src/state/` Zustand 스토어, WebSocket 연결
 - `src/ui/` React + Three.js 뷰포트, 피처 트리, 인스펙터
 - `server/` 파일 감시 + WebSocket 서버, MCP 서버(`mcp.ts` 진입점, `mcpServer.ts` 도구, `validate.ts` Node 검증, `relay.ts` 스크린샷 중계)
-- `examples/` 예제 모델 (플랜지, 박스 뚜껑)
+- `examples/` 예제 모델 (플랜지, 박스 뚜껑, 육각 비트 홀더, 폰 거치대, Raspberry Pi 플레이트·케이스·카메라 거치대) 와 내보낸 STL
 
 ## 개발
 

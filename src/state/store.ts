@@ -28,6 +28,10 @@ interface State {
   connection: ConnectionStatus;
   /** 서버가 감시 중인 모델 파일의 절대 경로. 아직 받지 못했으면 null. */
   filePath: string | null;
+  /** 감시 파일과 같은 폴더의 모델 파일 이름 목록 (서버가 보내 준다) */
+  files: string[];
+  /** 같은 폴더의 다른 모델을 연다. 서버가 감시 대상을 바꾸고 새 file 메시지를 보낸다. */
+  openFile: (name: string) => void;
   /** 피처 트리에서 선택된 피처. 없으면 null. */
   selectedFeatureId: string | null;
   /** 파일 내용(JSON 문자열)을 받아 검증·평가한다. */
@@ -70,6 +74,9 @@ export const useStore = create<State>((set, get) => {
         case "fileError":
           set({ schemaErrors: [{ path: "", message: m.message }] });
           reportErrors();
+          break;
+        case "files":
+          set({ files: m.files });
           break;
         case "screenshotRequest":
           void handleScreenshot(m.id, m.text);
@@ -227,7 +234,19 @@ export const useStore = create<State>((set, get) => {
     exportError: null,
     connection: "connecting",
     filePath: null,
+    files: [],
     selectedFeatureId: null,
+
+    openFile(name) {
+      if (name === get().filePath?.split(/[\\/]/).pop()) return;
+      // 선택을 비운다 — 새 파일에는 같은 id가 없을 수 있다. 예약된 저장은 이전 파일 것이므로 취소한다.
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+      }
+      set({ selectedFeatureId: null });
+      connection.send({ kind: "open", file: name });
+    },
 
     loadJson(text) {
       let raw: unknown;

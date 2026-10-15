@@ -11,16 +11,32 @@ export function App() {
   const mesh = useStore((s) => s.mesh);
   const connection = useStore((s) => s.connection);
   const filePath = useStore((s) => s.filePath);
-  const fileName = filePath?.split("/").pop();
+  const files = useStore((s) => s.files);
+  const openFile = useStore((s) => s.openFile);
+  const fileName = filePath?.split(/[\\/]/).pop();
+  // 현재 파일이 목록에 없을 때(폴더 밖 파일 등)도 드롭다운에 보이게 한다
+  const options = fileName && !files.includes(fileName) ? [fileName, ...files] : files;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <header style={{ display: "flex", gap: 16, alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #ddd" }}>
         <b>3Designer</b>
-        <span style={{ fontSize: 12, color: connection === "open" ? "#2a7" : "#c33" }}>
-          서버: {connection}
-          {fileName && ` · ${fileName}`}
-        </span>
+        <span style={{ fontSize: 12, color: connection === "open" ? "#2a7" : "#c33" }}>서버: {connection}</span>
+        {fileName && (
+          <select
+            aria-label="모델 파일"
+            value={fileName}
+            onChange={(e) => openFile(e.target.value)}
+            disabled={connection !== "open" || options.length < 2}
+            style={{ fontSize: 12 }}
+          >
+            {options.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+        )}
         {kernelStatus === "error" ? (
           <span style={{ fontSize: 12, color: "#cf1322" }}>커널 오류: {kernelError}</span>
         ) : (
