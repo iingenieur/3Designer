@@ -3,3 +3,6 @@ dist
 *.errors.json
 .DS_Store
 .*.tmp-*
+
+# 슬라이서 출력물(프린터별 G-code 3MF)은 스킬로 재생성한다
+examples/sliced-x2d/

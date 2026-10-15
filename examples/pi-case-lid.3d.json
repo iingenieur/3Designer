@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "boardW": 85, "boardD": 56, "gap": 1.5, "wall": 2, "cornerR": 4,
+    "lidT": 2, "lipH": 3, "lipW": 1.6, "lipGap": 0.25, "ventN": 8, "ventL": 30, "topChamfer": 0.5
+  },
+  "features": [
+    { "id": "top", "type": "extrude", "name": "뚜껑 판 (출력 시 바닥면)", "plane": "XY", "height": "lidT",
+      "profile": { "kind": "rect", "width": "boardW + 2*(gap + wall)", "height": "boardD + 2*(gap + wall)", "cornerRadius": "cornerR" } },
+    { "id": "lip", "type": "extrude", "name": "끼움 립", "plane": "XY", "offset": "lidT", "height": "lipH",
+      "profile": { "kind": "rect", "width": "boardW + 2*gap - 2*lipGap", "height": "boardD + 2*gap - 2*lipGap", "cornerRadius": "cornerR - wall - lipGap" } },
+    { "id": "lipHollow", "type": "extrude", "name": "립 안쪽 비움 (cut)", "op": "cut", "plane": "XY", "offset": "lidT", "height": "lipH + 1",
+      "profile": { "kind": "rect", "width": "boardW + 2*gap - 2*lipGap - 2*lipW", "height": "boardD + 2*gap - 2*lipGap - 2*lipW", "cornerRadius": 1 } },
+    { "id": "vents", "type": "box", "name": "통풍 슬롯 (cut)", "op": "cut",
+      "size": [2.5, "ventL", "lidT + 2"],
+      "pattern": { "pattern": "linear", "count": "ventN", "spacing": 6, "direction": "X" },
+      "transform": { "position": ["-(ventN - 1)*6/2", 0, -1] } },
+    { "id": "edge", "type": "chamfer", "name": "뚜껑 윗면 모따기", "distance": "topChamfer", "edges": "bottom" }
+  ]
+}

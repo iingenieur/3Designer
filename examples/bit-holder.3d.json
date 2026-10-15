@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "bitAF": 6.35,
+    "clearance": 0.4,
+    "cols": 5,
+    "pitch": 12,
+    "rowPitch": 12,
+    "holeDepth": 12,
+    "H": 15,
+    "cornerR": 3,
+    "topChamfer": 0.8,
+    "footChamfer": 0.5
+  },
+  "features": [
+    {
+      "id": "body", "type": "extrude", "name": "본체 (둥근 사각 블록)",
+      "plane": "XY", "height": "H",
+      "profile": { "kind": "rect", "width": "cols*pitch", "height": "2*rowPitch", "cornerRadius": "cornerR" }
+    },
+    { "id": "foot", "type": "chamfer", "name": "바닥 모따기 (엘리펀트 풋 방지)", "distance": "footChamfer", "edges": "bottom" },
+    {
+      "id": "hexFront", "type": "extrude", "name": "육각 비트 구멍 앞줄", "op": "cut",
+      "plane": "XY", "offset": "H - holeDepth", "height": "holeDepth + 1",
+      "profile": { "kind": "polygon", "sides": 6, "radius": "(bitAF + clearance) / (2*cos(30))" },
+      "pattern": { "pattern": "linear", "count": "cols", "spacing": "pitch", "direction": "X" },
+      "transform": { "position": ["-(cols-1)*pitch/2", "-rowPitch/2", 0] }
+    },
+    {
+      "id": "hexBack", "type": "extrude", "name": "육각 비트 구멍 뒷줄", "op": "cut",
+      "plane": "XY", "offset": "H - holeDepth", "height": "holeDepth + 1",
+      "profile": { "kind": "polygon", "sides": 6, "radius": "(bitAF + clearance) / (2*cos(30))" },
+      "pattern": { "pattern": "linear", "count": "cols", "spacing": "pitch", "direction": "X" },
+      "transform": { "position": ["-(cols-1)*pitch/2", "rowPitch/2", 0] }
+    },
+    { "id": "lead", "type": "chamfer", "name": "윗면·구멍 입구 모따기", "distance": "topChamfer", "edges": "top" }
+  ]
+}

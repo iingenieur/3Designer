@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "boardW": 85, "boardD": 56, "margin": 3.5, "plateT": 3, "cornerR": 4,
+    "soD": 6, "soH": 6, "screwD": 2.2, "holeOffX": 3.5, "holeSpX": 58, "holeSpY": 49,
+    "mountD": 4.4, "footChamfer": 0.5
+  },
+  "features": [
+    { "id": "plate", "type": "extrude", "name": "플레이트", "plane": "XY", "height": "plateT",
+      "profile": { "kind": "rect", "width": "boardW + 2*margin", "height": "boardD + 2*margin", "cornerRadius": "cornerR" } },
+    { "id": "mount", "type": "hole", "name": "벽·책상 고정 구멍 (M4)", "diameter": "mountD",
+      "positions": [["-(boardW/2 + margin - 6)", 0], ["boardW/2 + margin - 6", 0], [0, "-(boardD/2 + margin - 4.5)"], [0, "boardD/2 + margin - 4.5"]] },
+    { "id": "foot", "type": "chamfer", "name": "바닥 모따기", "distance": "footChamfer", "edges": "bottom" },
+    { "id": "soA", "type": "cylinder", "name": "Pi 스탠드오프 앞줄 (M2.5)", "radius": "soD/2", "height": "plateT + soH",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "holeSpX", "direction": "X" },
+      "transform": { "position": ["-boardW/2 + holeOffX", "-holeSpY/2", 0] } },
+    { "id": "soB", "type": "cylinder", "name": "Pi 스탠드오프 뒷줄 (M2.5)", "radius": "soD/2", "height": "plateT + soH",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "holeSpX", "direction": "X" },
+      "transform": { "position": ["-boardW/2 + holeOffX", "holeSpY/2", 0] } },
+    { "id": "screws", "type": "hole", "name": "Pi 나사 구멍 (M2.5 셀프탭)", "diameter": "screwD",
+      "positions": [["-boardW/2 + holeOffX", "-holeSpY/2"], ["-boardW/2 + holeOffX + holeSpX", "-holeSpY/2"],
+                    ["-boardW/2 + holeOffX", "holeSpY/2"], ["-boardW/2 + holeOffX + holeSpX", "holeSpY/2"]] }
+  ]
+}

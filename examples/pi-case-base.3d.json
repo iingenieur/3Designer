@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "boardW": 85, "boardD": 56, "gap": 1.5, "wall": 2, "floorT": 2, "H": 27, "cornerR": 4,
+    "soD": 6, "soH": 5, "screwD": 2.2, "holeOffX": 3.5, "holeSpX": 58, "holeSpY": 49,
+    "windowZ": 8, "sideWinH": 8, "sdW": 14, "sdH": 5, "ventN": 6, "footChamfer": 0.5
+  },
+  "features": [
+    { "id": "shell", "type": "extrude", "name": "케이스 외형", "plane": "XY", "height": "H",
+      "profile": { "kind": "rect", "width": "boardW + 2*(gap + wall)", "height": "boardD + 2*(gap + wall)", "cornerRadius": "cornerR" } },
+    { "id": "cavity", "type": "extrude", "name": "내부 공간 (cut)", "op": "cut", "plane": "XY", "offset": "floorT", "height": "H",
+      "profile": { "kind": "rect", "width": "boardW + 2*gap", "height": "boardD + 2*gap", "cornerRadius": "cornerR - wall" } },
+    { "id": "soA", "type": "cylinder", "name": "Pi 스탠드오프 앞줄 (M2.5)", "radius": "soD/2", "height": "floorT + soH",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "holeSpX", "direction": "X" },
+      "transform": { "position": ["-boardW/2 + holeOffX", "-holeSpY/2", 0] } },
+    { "id": "soB", "type": "cylinder", "name": "Pi 스탠드오프 뒷줄 (M2.5)", "radius": "soD/2", "height": "floorT + soH",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "holeSpX", "direction": "X" },
+      "transform": { "position": ["-boardW/2 + holeOffX", "holeSpY/2", 0] } },
+    { "id": "scA", "type": "cylinder", "name": "나사 구멍 앞줄 (cut, 막힌 구멍)", "op": "cut", "radius": "screwD/2", "height": "soH + floorT - 0.8",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "holeSpX", "direction": "X" },
+      "transform": { "position": ["-boardW/2 + holeOffX", "-holeSpY/2", 0.8] } },
+    { "id": "scB", "type": "cylinder", "name": "나사 구멍 뒷줄 (cut, 막힌 구멍)", "op": "cut", "radius": "screwD/2", "height": "soH + floorT - 0.8",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "holeSpX", "direction": "X" },
+      "transform": { "position": ["-boardW/2 + holeOffX", "holeSpY/2", 0.8] } },
+    { "id": "usbEnd", "type": "box", "name": "USB·이더넷 쪽 개구부 (cut)", "op": "cut",
+      "size": ["wall + 2", 52, "H"], "transform": { "position": ["boardW/2 + gap + wall/2", 0, "windowZ"] } },
+    { "id": "pwrSide", "type": "box", "name": "전원·HDMI 창 (cut)", "op": "cut",
+      "size": [54, "wall + 2", "sideWinH"], "transform": { "position": [-11, "-(boardD/2 + gap + wall/2)", "windowZ"] } },
+    { "id": "sd", "type": "box", "name": "SD 카드 슬롯 (cut)", "op": "cut",
+      "size": ["wall + 2", "sdW", "sdH"], "transform": { "position": ["-(boardW/2 + gap + wall/2)", 0, "floorT + soH - 2"] } },
+    { "id": "vents", "type": "box", "name": "바닥 통풍 슬롯 (cut)", "op": "cut",
+      "size": [2.5, 30, "floorT + 2"],
+      "pattern": { "pattern": "linear", "count": "ventN", "spacing": 6, "direction": "X" },
+      "transform": { "position": ["-(ventN - 1)*6/2", 0, -1] } },
+    { "id": "foot", "type": "chamfer", "name": "바닥 모따기", "distance": "footChamfer", "edges": "bottom" }
+  ]
+}

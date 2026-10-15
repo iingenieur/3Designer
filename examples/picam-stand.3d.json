@@ -1,0 +1,198 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "holeX": 21,
+    "holeZ": 12.5,
+    "screwD": 1.8,
+    "standoffD": 4.5,
+    "standoffH": 4,
+    "plateW": 29,
+    "plateT": 3,
+    "plateH": 41.5,
+    "plateY": -14.5,
+    "faceY": -13,
+    "loZ": 25.5,
+    "baseW": 40,
+    "baseD": 36,
+    "baseT": 4,
+    "mountD": 3.4,
+    "tilt": 10,
+    "footChamfer": 0.5
+  },
+  "features": [
+    {
+      "id": "mount",
+      "type": "hole",
+      "name": "받침 고정 구멍 (M3)",
+      "diameter": "mountD",
+      "positions": [
+        [
+          "-baseW/2 + 5",
+          10
+        ],
+        [
+          "baseW/2 - 5",
+          10
+        ]
+      ]
+    },
+    {
+      "id": "base",
+      "type": "extrude",
+      "name": "받침",
+      "profile": {
+        "kind": "rect",
+        "width": "baseW",
+        "height": "baseD",
+        "cornerRadius": 4
+      },
+      "height": "baseT"
+    },
+    {
+      "id": "ribbon",
+      "type": "box",
+      "name": "리본 케이블 슬롯 (cut)",
+      "transform": {
+        "position": [
+          0,
+          -7,
+          -1
+        ]
+      },
+      "op": "cut",
+      "size": [
+        18,
+        8,
+        "baseT + 2"
+      ]
+    },
+    {
+      "id": "foot",
+      "type": "chamfer",
+      "name": "바닥 모따기",
+      "distance": "footChamfer",
+      "edges": "bottom"
+    },
+    {
+      "id": "plate",
+      "type": "box",
+      "name": "카메라 플레이트 (tilt 적용)",
+      "transform": {
+        "position": [
+          0,
+          "plateY*cos(tilt) + 1*sin(tilt)",
+          "-plateY*sin(tilt) + 1*cos(tilt)"
+        ],
+        "rotation": [
+          "-tilt",
+          0,
+          0
+        ]
+      },
+      "size": [
+        "plateW",
+        "plateT",
+        "plateH"
+      ]
+    },
+    {
+      "id": "soLo",
+      "type": "cylinder",
+      "name": "카메라 스탠드오프 아랫줄 (M2)",
+      "transform": {
+        "position": [
+          "-holeX/2",
+          "faceY*cos(tilt) + loZ*sin(tilt)",
+          "-faceY*sin(tilt) + loZ*cos(tilt)"
+        ],
+        "rotation": [
+          "-90 - tilt",
+          0,
+          0
+        ]
+      },
+      "pattern": {
+        "pattern": "linear",
+        "count": 2,
+        "spacing": "holeX"
+      },
+      "radius": "standoffD/2",
+      "height": "standoffH"
+    },
+    {
+      "id": "soHi",
+      "type": "cylinder",
+      "name": "카메라 스탠드오프 윗줄 (M2)",
+      "transform": {
+        "position": [
+          "-holeX/2",
+          "faceY*cos(tilt) + (loZ+holeZ)*sin(tilt)",
+          "-faceY*sin(tilt) + (loZ+holeZ)*cos(tilt)"
+        ],
+        "rotation": [
+          "-90 - tilt",
+          0,
+          0
+        ]
+      },
+      "pattern": {
+        "pattern": "linear",
+        "count": 2,
+        "spacing": "holeX"
+      },
+      "radius": "standoffD/2",
+      "height": "standoffH"
+    },
+    {
+      "id": "scLo",
+      "type": "cylinder",
+      "name": "나사 구멍 아랫줄 (cut)",
+      "transform": {
+        "position": [
+          "-holeX/2",
+          "(faceY-2)*cos(tilt) + loZ*sin(tilt)",
+          "-(faceY-2)*sin(tilt) + loZ*cos(tilt)"
+        ],
+        "rotation": [
+          "-90 - tilt",
+          0,
+          0
+        ]
+      },
+      "op": "cut",
+      "pattern": {
+        "pattern": "linear",
+        "count": 2,
+        "spacing": "holeX"
+      },
+      "radius": "screwD/2",
+      "height": "standoffH + 2"
+    },
+    {
+      "id": "scHi",
+      "type": "cylinder",
+      "name": "나사 구멍 윗줄 (cut)",
+      "transform": {
+        "position": [
+          "-holeX/2",
+          "(faceY-2)*cos(tilt) + (loZ+holeZ)*sin(tilt)",
+          "-(faceY-2)*sin(tilt) + (loZ+holeZ)*cos(tilt)"
+        ],
+        "rotation": [
+          "-90 - tilt",
+          0,
+          0
+        ]
+      },
+      "op": "cut",
+      "pattern": {
+        "pattern": "linear",
+        "count": 2,
+        "spacing": "holeX"
+      },
+      "radius": "screwD/2",
+      "height": "standoffH + 2"
+    }
+  ]
+}

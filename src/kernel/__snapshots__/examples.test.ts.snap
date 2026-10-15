@@ -1,5 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`examples > bit-holder.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 156,
+  "size": [
+    60,
+    24,
+    15,
+  ],
+  "volume": 16596.58,
+}
+`;
+
 exports[`examples > box-lid.3d.json builds without errors and matches snapshot 1`] = `
 {
   "faces": 36,
@@ -21,5 +33,77 @@ exports[`examples > flange.3d.json builds without errors and matches snapshot 1`
     14,
   ],
   "volume": 10249.04,
+}
+`;
+
+exports[`examples > phone-stand.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 41,
+  "size": [
+    80,
+    55,
+    25,
+  ],
+  "volume": 83289.99,
+}
+`;
+
+exports[`examples > pi-cam-bracket.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 59,
+  "size": [
+    92,
+    77,
+    30.5,
+  ],
+  "volume": 23055.37,
+}
+`;
+
+exports[`examples > pi-case-base.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 102,
+  "size": [
+    92,
+    63,
+    27,
+  ],
+  "volume": 22910.71,
+}
+`;
+
+exports[`examples > pi-case-lid.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 100,
+  "size": [
+    92,
+    63,
+    5,
+  ],
+  "volume": 11626.01,
+}
+`;
+
+exports[`examples > pi-plate.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 38,
+  "size": [
+    92,
+    63,
+    9,
+  ],
+  "volume": 17660.87,
+}
+`;
+
+exports[`examples > picam-stand.3d.json builds without errors and matches snapshot 1`] = `
+{
+  "faces": 51,
+  "size": [
+    40,
+    36,
+    44.63,
+  ],
+  "volume": 8788.78,
 }
 `;

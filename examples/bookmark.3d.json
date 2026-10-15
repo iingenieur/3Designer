@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "stripW": 28,
+    "stripL": 110,
+    "T": 1.2,
+    "cornerR": 5,
+    "headD": 40,
+    "tasselD": 4,
+    "tasselOffset": 10,
+    "frame": 3,
+    "gap": 1.2,
+    "slotTopGap": 2
+  },
+  "features": [
+    {
+      "id": "strip",
+      "type": "extrude",
+      "name": "책 사이에 끼우는 띄",
+      "profile": {
+        "kind": "rect",
+        "width": "stripW",
+        "height": "stripL",
+        "cornerRadius": "cornerR"
+      },
+      "height": "T"
+    },
+    {
+      "id": "head",
+      "type": "cylinder",
+      "name": "위로 튜어나오는 둥근 머리",
+      "transform": {
+        "position": [
+          0,
+          "stripL/2",
+          0
+        ]
+      },
+      "radius": "headD/2",
+      "height": "T"
+    },
+    {
+      "id": "slot",
+      "type": "extrude",
+      "name": "클립 틈 영역 (cut)",
+      "transform": {
+        "position": [
+          0,
+          "(frame - headD/2 - slotTopGap)/2",
+          0
+        ]
+      },
+      "op": "cut",
+      "profile": {
+        "kind": "rect",
+        "width": "stripW - 2*frame",
+        "height": "stripL - frame - headD/2 - slotTopGap",
+        "cornerRadius": "cornerR - frame"
+      },
+      "offset": -1,
+      "height": "T + 2"
+    },
+    {
+      "id": "tongue",
+      "type": "extrude",
+      "name": "가운데 혀 (머리에 연결)",
+      "transform": {
+        "position": [
+          0,
+          "(frame + gap - headD/2 - slotTopGap + 2)/2",
+          0
+        ]
+      },
+      "profile": {
+        "kind": "rect",
+        "width": "stripW - 2*frame - 2*gap",
+        "height": "stripL - frame - gap - headD/2 - slotTopGap + 2",
+        "cornerRadius": "cornerR - frame - gap"
+      },
+      "height": "T"
+    },
+    {
+      "id": "tassel",
+      "type": "hole",
+      "name": "태슬(낌) 구멍",
+      "diameter": "tasselD",
+      "positions": [
+        [
+          0,
+          "stripL/2 + tasselOffset"
+        ]
+      ]
+    }
+  ]
+}

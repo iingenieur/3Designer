@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "W": 80,
+    "D": 55,
+    "H": 25,
+    "cornerR": 5,
+    "slotW": 13,
+    "slotTilt": 15,
+    "slotY": 10,
+    "floorT": 5,
+    "cableW": 14,
+    "cableH": 6,
+    "topChamfer": 1,
+    "footChamfer": 0.5
+  },
+  "features": [
+    {
+      "id": "body",
+      "type": "extrude",
+      "name": "본체 (둥근 사각 블록)",
+      "profile": {
+        "kind": "rect",
+        "width": "W",
+        "height": "D",
+        "cornerRadius": "cornerR"
+      },
+      "height": "H"
+    },
+    {
+      "id": "foot",
+      "type": "chamfer",
+      "name": "바닥 모따기 (엘리펀트 풋 방지)",
+      "distance": "footChamfer",
+      "edges": "bottom"
+    },
+    {
+      "id": "slot",
+      "type": "box",
+      "name": "폰 슬롯 (15° 기울임, cut)",
+      "transform": {
+        "position": [
+          0,
+          "slotY",
+          "floorT"
+        ],
+        "rotation": [
+          "slotTilt",
+          0,
+          0
+        ]
+      },
+      "op": "cut",
+      "size": [
+        "W + 4",
+        "slotW",
+        "H * 2"
+      ]
+    },
+    {
+      "id": "cable",
+      "type": "box",
+      "name": "충전 케이블 통로 (바닥, cut)",
+      "transform": {
+        "position": [
+          0,
+          0,
+          -1
+        ]
+      },
+      "op": "cut",
+      "size": [
+        "cableW",
+        "D + 4",
+        "cableH + 1"
+      ]
+    },
+    {
+      "id": "topEdge",
+      "type": "chamfer",
+      "name": "윗면·슬롯 입구 모따기",
+      "distance": "topChamfer",
+      "edges": "top"
+    }
+  ]
+}
