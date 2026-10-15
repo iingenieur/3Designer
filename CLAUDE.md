@@ -23,6 +23,10 @@
 - 사용자가 스케치·돌출·필렛·보스·컷 같은 SolidWorks 용어를 쓰면 그대로 이해한다. 사용자는 SolidWorks 경험자다. "보스 돌출" = extrude op add, "컷 돌출" = extrude op cut.
 - 파일을 편집하는 동안 사용자가 UI에서 치수를 바꿨을 수 있으니, 편집 전에 항상 파일을 다시 읽는다.
 
+## 출력 (Bambu Lab X2D)
+
+사용자가 모델을 실제로 뽑고 싶어 하면 프로젝트 스킬 `printing-with-bambu-x2d`(`.claude/skills/printing-with-bambu-x2d/SKILL.md`)를 따른다. STL 내보내기·CLI 슬라이싱·Bambu Studio GUI 전송 스크립트와 필요한 권한 세팅, 겪었던 함정이 거기 있다. 프린터로 Send는 사용자가 명시적으로 출력을 요청했을 때만 누른다.
+
 ## 개발
 
 - `npm test` 전체 테스트 (커널 테스트는 WASM 로드로 수 초). `npm run typecheck`.
