@@ -6,3 +6,5 @@ dist
 
 # 슬라이서 출력물(프린터별 G-code 3MF)은 스킬로 재생성한다
 examples/sliced-x2d/
+# Bambu Studio CLI가 --help만 실행해도 cwd에 남기는 결과 파일
+/result.json
