@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": { "D": 8, "len": 210, "flat": 0.4 },
+  "features": [
+    { "id": "rod", "type": "extrude", "name": "운반용 봉 Ø8 (눕혀서 출력)", "plane": "YZ", "offset": "-len/2", "height": "len",
+      "profile": { "kind": "circle", "radius": "D/2" },
+      "transform": { "position": [0, 0, "D/2 - flat"] } },
+    { "id": "floor", "type": "box", "name": "바닥 평탄화 (cut)", "op": "cut", "size": ["len + 10", 20, 5],
+      "transform": { "position": [0, 0, -5] } }
+  ]
+}

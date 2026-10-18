@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "L": 150,
+    "W": 90,
+    "H": 88,
+    "wall": 3,
+    "floorT": 3,
+    "plinthT": 5,
+    "plinthH": 16,
+    "crownT": 1.5,
+    "crownH": 5,
+    "rebW": 1.5,
+    "rebD": 1.5,
+    "dvR": 3.5,
+    "slotH": 13,
+    "ringInset": 22
+  },
+  "features": [
+    {
+      "id": "shell",
+      "type": "extrude",
+      "name": "궤 외형",
+      "profile": {
+        "kind": "rect",
+        "width": "L",
+        "height": "W"
+      },
+      "height": "H"
+    },
+    {
+      "id": "plinth",
+      "type": "extrude",
+      "name": "하단 받침띠",
+      "profile": {
+        "kind": "rect",
+        "width": "L + 2*plinthT",
+        "height": "W + 2*plinthT"
+      },
+      "height": "plinthH"
+    },
+    {
+      "id": "crown",
+      "type": "box",
+      "name": "상단 금테 (크라운)",
+      "transform": {
+        "position": [
+          0,
+          0,
+          "H - crownH"
+        ]
+      },
+      "size": [
+        "L + 2*crownT",
+        "W + 2*crownT",
+        "crownH"
+      ]
+    },
+    {
+      "id": "cavity",
+      "type": "extrude",
+      "name": "내부 수납 공간 (cut)",
+      "op": "cut",
+      "profile": {
+        "kind": "rect",
+        "width": "L - 2*wall",
+        "height": "W - 2*wall"
+      },
+      "offset": "floorT",
+      "height": "H"
+    },
+    {
+      "id": "rebate",
+      "type": "extrude",
+      "name": "덮개 단차 (cut)",
+      "op": "cut",
+      "profile": {
+        "kind": "rect",
+        "width": "L - 2*wall + 2*rebW",
+        "height": "W - 2*wall + 2*rebW"
+      },
+      "offset": "H - rebD",
+      "height": "rebD + 1"
+    },
+    {
+      "id": "slotFR",
+      "type": "extrude",
+      "name": "고리 도브테일 슬롯 앞-오른쪽 (cut)",
+      "transform": {
+        "position": [
+          "L/2 - ringInset",
+          "-(W/2 + plinthT - dvR*cos(30))",
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          90
+        ]
+      },
+      "op": "cut",
+      "profile": {
+        "kind": "polygon",
+        "sides": 6,
+        "radius": "dvR"
+      },
+      "height": "slotH"
+    },
+    {
+      "id": "slotFL",
+      "type": "extrude",
+      "name": "고리 도브테일 슬롯 앞-왼쪽 (cut)",
+      "transform": {
+        "position": [
+          "-(L/2 - ringInset)",
+          "-(W/2 + plinthT - dvR*cos(30))",
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          90
+        ]
+      },
+      "op": "cut",
+      "profile": {
+        "kind": "polygon",
+        "sides": 6,
+        "radius": "dvR"
+      },
+      "height": "slotH"
+    },
+    {
+      "id": "slotBR",
+      "type": "extrude",
+      "name": "고리 도브테일 슬롯 뒤-오른쪽 (cut)",
+      "transform": {
+        "position": [
+          "L/2 - ringInset",
+          "W/2 + plinthT - dvR*cos(30)",
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          90
+        ]
+      },
+      "op": "cut",
+      "profile": {
+        "kind": "polygon",
+        "sides": 6,
+        "radius": "dvR"
+      },
+      "height": "slotH"
+    },
+    {
+      "id": "slotBL",
+      "type": "extrude",
+      "name": "고리 도브테일 슬롯 뒤-왼쪽 (cut)",
+      "transform": {
+        "position": [
+          "-(L/2 - ringInset)",
+          "W/2 + plinthT - dvR*cos(30)",
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          90
+        ]
+      },
+      "op": "cut",
+      "profile": {
+        "kind": "polygon",
+        "sides": 6,
+        "radius": "dvR"
+      },
+      "height": "slotH"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "pinD": 2.9,
+    "pinH": 2.8,
+    "baseL": 18,
+    "baseW": 14,
+    "baseH": 3,
+    "robeR": 5.5,
+    "robeH": 11,
+    "torsoR": 4,
+    "torsoH": 7,
+    "headR": 3.5,
+    "wingL": 32,
+    "wingT": 2,
+    "wingH": 9,
+    "wingRootX": -4,
+    "shoulderZ": 20,
+    "wingSplay": 20
+  },
+  "features": [
+    {
+      "id": "pin",
+      "type": "cylinder",
+      "name": "결합 핀 Ø3",
+      "radius": "pinD/2",
+      "height": "pinH"
+    },
+    {
+      "id": "base",
+      "type": "box",
+      "name": "받침",
+      "transform": {
+        "position": [
+          0,
+          0,
+          "pinH"
+        ]
+      },
+      "size": [
+        "baseL",
+        "baseW",
+        "baseH"
+      ]
+    },
+    {
+      "id": "robe",
+      "type": "cylinder",
+      "name": "무릎 꿇은 하체 (옷자락)",
+      "transform": {
+        "position": [
+          0,
+          0,
+          "pinH + baseH"
+        ]
+      },
+      "radius": "robeR",
+      "height": "robeH"
+    },
+    {
+      "id": "torso",
+      "type": "cylinder",
+      "name": "상체",
+      "transform": {
+        "position": [
+          0,
+          0,
+          "pinH + baseH + robeH"
+        ]
+      },
+      "radius": "torsoR",
+      "height": "torsoH"
+    },
+    {
+      "id": "head",
+      "type": "sphere",
+      "name": "머리",
+      "transform": {
+        "position": [
+          0.5,
+          0,
+          "pinH + baseH + robeH + torsoH + 1.5"
+        ]
+      },
+      "radius": "headR"
+    },
+    {
+      "id": "wingR",
+      "type": "box",
+      "name": "오른쪽 날개 (앞으로 45° 상승)",
+      "transform": {
+        "position": [
+          "wingRootX + wingL/2*cos(45)*cos(wingSplay)",
+          "torsoR + wingL/2*cos(45)*sin(wingSplay)",
+          "pinH + shoulderZ + wingL/2*cos(45)"
+        ],
+        "rotation": [
+          0,
+          -45,
+          "wingSplay"
+        ]
+      },
+      "size": [
+        "wingL",
+        "wingT",
+        "wingH"
+      ]
+    },
+    {
+      "id": "wingL",
+      "type": "box",
+      "name": "왼쪽 날개 (앞으로 45° 상승)",
+      "transform": {
+        "position": [
+          "wingRootX + wingL/2*cos(45)*cos(wingSplay)",
+          "-torsoR - wingL/2*cos(45)*sin(wingSplay)",
+          "pinH + shoulderZ + wingL/2*cos(45)"
+        ],
+        "rotation": [
+          0,
+          -45,
+          "-wingSplay"
+        ]
+      },
+      "size": [
+        "wingL",
+        "wingT",
+        "wingH"
+      ]
+    }
+  ]
+}

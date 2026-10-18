@@ -1,0 +1,3335 @@
+{
+ "version": 1,
+ "units": "mm",
+ "parameters": {
+  "explodeZ": 0,
+  "explodeX": 0,
+  "explodeInner": 0
+ },
+ "features": [
+  {
+   "id": "body_shell",
+   "name": "[본체] 궤 외형",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 150,
+    "height": 90
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 88,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "0 + 30*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "body_plinth",
+   "name": "[본체] 하단 받침띠",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 160,
+    "height": 100
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 16,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "0 + 30*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "body_crown",
+   "name": "[본체] 상단 금테 (크라운)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "83 + 30*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    153,
+    93,
+    5
+   ]
+  },
+  {
+   "id": "body_cavity",
+   "name": "[본체] 내부 수납 공간 (cut)",
+   "suppressed": false,
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 144,
+    "height": 84
+   },
+   "plane": "XY",
+   "offset": 3,
+   "height": 88,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "0 + 30*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "body_rebate",
+   "name": "[본체] 덮개 단차 (cut)",
+   "suppressed": false,
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 147,
+    "height": 87
+   },
+   "plane": "XY",
+   "offset": 86.5,
+   "height": 2.5,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "0 + 30*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "body_slotFR",
+   "name": "[본체] 고리 도브테일 슬롯 앞-오른쪽 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     90
+    ],
+    "position": [
+     53,
+     -46.9689,
+     "0 + 30*explodeZ"
+    ]
+   },
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 13
+  },
+  {
+   "id": "body_slotFL",
+   "name": "[본체] 고리 도브테일 슬롯 앞-왼쪽 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     90
+    ],
+    "position": [
+     -53,
+     -46.9689,
+     "0 + 30*explodeZ"
+    ]
+   },
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 13
+  },
+  {
+   "id": "body_slotBR",
+   "name": "[본체] 고리 도브테일 슬롯 뒤-오른쪽 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     90
+    ],
+    "position": [
+     53,
+     46.9689,
+     "0 + 30*explodeZ"
+    ]
+   },
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 13
+  },
+  {
+   "id": "body_slotBL",
+   "name": "[본체] 고리 도브테일 슬롯 뒤-왼쪽 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     90
+    ],
+    "position": [
+     -53,
+     46.9689,
+     "0 + 30*explodeZ"
+    ]
+   },
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 13
+  },
+  {
+   "id": "tab1_slab",
+   "name": "[십계명 돌판 1] 돌판",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 45,
+    "height": 65,
+    "cornerRadius": 1.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 6,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -47.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab1_framet",
+   "name": "[십계명 돌판 1] 앞면 테두리 홈 (cut)",
+   "suppressed": false,
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 39,
+    "height": 59,
+    "cornerRadius": 1
+   },
+   "plane": "XY",
+   "offset": 5.2,
+   "height": 1.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -47.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab1_innert",
+   "name": "[십계명 돌판 1] 앞면 글자 면 복원",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 37,
+    "height": 57,
+    "cornerRadius": 0.5
+   },
+   "plane": "XY",
+   "offset": 5.2,
+   "height": 0.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -47.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab1_frameb",
+   "name": "[십계명 돌판 1] 뒷면 테두리 홈 (cut)",
+   "suppressed": false,
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 39,
+    "height": 59,
+    "cornerRadius": 1
+   },
+   "plane": "XY",
+   "offset": -1,
+   "height": 1.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -47.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab1_innerb",
+   "name": "[십계명 돌판 1] 뒷면 글자 면 복원",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 37,
+    "height": 57,
+    "cornerRadius": 0.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 0.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -47.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab1_lt1",
+   "name": "[십계명 돌판 1] 앞면 계명 1 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60,
+     32.5,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt2",
+   "name": "[십계명 돌판 1] 앞면 계명 1 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -48,
+     27.6,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 7,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt3",
+   "name": "[십계명 돌판 1] 앞면 계명 2 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60.15,
+     21.3,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 5,
+    "spacing": 6.6,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4.5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt4",
+   "name": "[십계명 돌판 1] 앞면 계명 2 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -45.5,
+     16.4,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 10,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    8,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt5",
+   "name": "[십계명 돌판 1] 앞면 계명 3 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -58,
+     10.1,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 11,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    9,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt6",
+   "name": "[십계명 돌판 1] 앞면 계명 3 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -53,
+     5.2,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 6.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt7",
+   "name": "[십계명 돌판 1] 앞면 계명 4 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60.2,
+     -1.1,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.4,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt8",
+   "name": "[십계명 돌판 1] 앞면 계명 4 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -50.5,
+     -6,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 8,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt9",
+   "name": "[십계명 돌판 1] 앞면 계명 5 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60.8,
+     -12.3,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 6,
+    "spacing": 5.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    3.6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lt10",
+   "name": "[십계명 돌판 1] 앞면 계명 5 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -44,
+     -17.2,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 9,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb1",
+   "name": "[십계명 돌판 1] 뒷면 계명 1 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60.5,
+     32.5,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb2",
+   "name": "[십계명 돌판 1] 뒷면 계명 1 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -61,
+     27.6,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 7,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb3",
+   "name": "[십계명 돌판 1] 뒷면 계명 2 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -61.25,
+     21.3,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 5,
+    "spacing": 6.6,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4.5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb4",
+   "name": "[십계명 돌판 1] 뒷면 계명 2 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -59.5,
+     16.4,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 10,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    8,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb5",
+   "name": "[십계명 돌판 1] 뒷면 계명 3 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -59,
+     10.1,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 11,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    9,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb6",
+   "name": "[십계명 돌판 1] 뒷면 계명 3 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -61.5,
+     5.2,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 6.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb7",
+   "name": "[십계명 돌판 1] 뒷면 계명 4 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60,
+     -1.1,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.4,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb8",
+   "name": "[십계명 돌판 1] 뒷면 계명 4 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60.5,
+     -6,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 8,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb9",
+   "name": "[십계명 돌판 1] 뒷면 계명 5 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -61.7,
+     -12.3,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 6,
+    "spacing": 5.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    3.6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab1_lb10",
+   "name": "[십계명 돌판 1] 뒷면 계명 5 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -60,
+     -17.2,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 9,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_slab",
+   "name": "[십계명 돌판 2] 돌판",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 45,
+    "height": 65,
+    "cornerRadius": 1.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 6,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -0.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab2_framet",
+   "name": "[십계명 돌판 2] 앞면 테두리 홈 (cut)",
+   "suppressed": false,
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 39,
+    "height": 59,
+    "cornerRadius": 1
+   },
+   "plane": "XY",
+   "offset": 5.2,
+   "height": 1.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -0.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab2_innert",
+   "name": "[십계명 돌판 2] 앞면 글자 면 복원",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 37,
+    "height": 57,
+    "cornerRadius": 0.5
+   },
+   "plane": "XY",
+   "offset": 5.2,
+   "height": 0.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -0.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab2_frameb",
+   "name": "[십계명 돌판 2] 뒷면 테두리 홈 (cut)",
+   "suppressed": false,
+   "op": "cut",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 39,
+    "height": 59,
+    "cornerRadius": 1
+   },
+   "plane": "XY",
+   "offset": -1,
+   "height": 1.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -0.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab2_innerb",
+   "name": "[십계명 돌판 2] 뒷면 글자 면 복원",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 37,
+    "height": 57,
+    "cornerRadius": 0.5
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 0.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -0.5,
+     7.5,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "tab2_lt1",
+   "name": "[십계명 돌판 2] 앞면 계명 1 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13,
+     32.5,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt2",
+   "name": "[십계명 돌판 2] 앞면 계명 1 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -1,
+     27.6,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 7,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt3",
+   "name": "[십계명 돌판 2] 앞면 계명 2 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13.15,
+     21.3,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 5,
+    "spacing": 6.6,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4.5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt4",
+   "name": "[십계명 돌판 2] 앞면 계명 2 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     1.5,
+     16.4,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 10,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    8,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt5",
+   "name": "[십계명 돌판 2] 앞면 계명 3 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -11,
+     10.1,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 11,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    9,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt6",
+   "name": "[십계명 돌판 2] 앞면 계명 3 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -6,
+     5.2,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 6.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt7",
+   "name": "[십계명 돌판 2] 앞면 계명 4 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13.2,
+     -1.1,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.4,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt8",
+   "name": "[십계명 돌판 2] 앞면 계명 4 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -3.5,
+     -6,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 8,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt9",
+   "name": "[십계명 돌판 2] 앞면 계명 5 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13.8,
+     -12.3,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 6,
+    "spacing": 5.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    3.6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lt10",
+   "name": "[십계명 돌판 2] 앞면 계명 5 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     3,
+     -17.2,
+     "8.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 9,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb1",
+   "name": "[십계명 돌판 2] 뒷면 계명 1 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13.5,
+     32.5,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb2",
+   "name": "[십계명 돌판 2] 뒷면 계명 1 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -14,
+     27.6,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 7,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb3",
+   "name": "[십계명 돌판 2] 뒷면 계명 2 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -14.25,
+     21.3,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 5,
+    "spacing": 6.6,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4.5,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb4",
+   "name": "[십계명 돌판 2] 뒷면 계명 2 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -12.5,
+     16.4,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 10,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    8,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb5",
+   "name": "[십계명 돌판 2] 뒷면 계명 3 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -12,
+     10.1,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 11,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    9,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb6",
+   "name": "[십계명 돌판 2] 뒷면 계명 3 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -14.5,
+     5.2,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 6.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    4,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb7",
+   "name": "[십계명 돌판 2] 뒷면 계명 4 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13,
+     -1.1,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.4,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb8",
+   "name": "[십계명 돌판 2] 뒷면 계명 4 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13.5,
+     -6,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 8,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb9",
+   "name": "[십계명 돌판 2] 뒷면 계명 5 글자줄 1 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -14.7,
+     -12.3,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 6,
+    "spacing": 5.5,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    3.6,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "tab2_lb10",
+   "name": "[십계명 돌판 2] 뒷면 계명 5 글자줄 2 (음각)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -13,
+     -17.2,
+     "2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 9,
+    "direction": "X"
+   },
+   "type": "box",
+   "size": [
+    7,
+    1.6,
+    1.8
+   ]
+  },
+  {
+   "id": "jar_foot",
+   "name": "[만나 항아리] 굽",
+   "suppressed": false,
+   "op": "add",
+   "type": "cylinder",
+   "radius": 7.5,
+   "height": 5.5,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "jar_belly",
+   "name": "[만나 항아리] 몸통",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "15 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 10
+  },
+  {
+   "id": "jar_neck",
+   "name": "[만나 항아리] 목",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "21 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 5,
+   "height": 11
+  },
+  {
+   "id": "jar_rim",
+   "name": "[만나 항아리] 입술",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "30.5 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 6,
+   "height": 1.5
+  },
+  {
+   "id": "jar_handles",
+   "name": "[만나 항아리] 양쪽 손잡이",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     90,
+     0,
+     0
+    ],
+    "position": [
+     49,
+     29.8,
+     "23 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 16.6,
+    "direction": "X"
+   },
+   "type": "cylinder",
+   "radius": 3.4,
+   "height": 1.6
+  },
+  {
+   "id": "jar_handleHoles",
+   "name": "[만나 항아리] 손잡이 구멍 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     90,
+     0,
+     0
+    ],
+    "position": [
+     49,
+     30.8,
+     "23 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 16.6,
+    "direction": "X"
+   },
+   "type": "cylinder",
+   "radius": 2,
+   "height": 3.6
+  },
+  {
+   "id": "jar_cavity",
+   "name": "[만나 항아리] 내부 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "15 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "type": "sphere",
+   "radius": 8.8
+  },
+  {
+   "id": "jar_bore",
+   "name": "[만나 항아리] 목 구멍 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "19 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "cut",
+   "type": "cylinder",
+   "radius": 3.8,
+   "height": 29
+  },
+  {
+   "id": "jarLid_cap",
+   "name": "[항아리 뚜껑] 항아리 뚜껑 (출력 시 윗면이 바닥)",
+   "suppressed": false,
+   "op": "add",
+   "type": "cylinder",
+   "radius": 6,
+   "height": 2,
+   "transform": {
+    "rotation": [
+     180,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "34 + 30*explodeZ + 150*explodeInner"
+    ]
+   }
+  },
+  {
+   "id": "jarLid_plug",
+   "name": "[항아리 뚜껑] 목에 끼우는 마개",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     180,
+     0,
+     0
+    ],
+    "position": [
+     57.3,
+     29,
+     "32 + 30*explodeZ + 150*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 3.6,
+   "height": 3
+  },
+  {
+   "id": "rod_rod",
+   "name": "[아론의 지팡이] 살구나무 지팡이 Ø3.5",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     0,
+     -32,
+     "4.45 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "circle",
+    "radius": 1.75
+   },
+   "plane": "YZ",
+   "offset": -65,
+   "height": 130
+  },
+  {
+   "id": "rod_knob",
+   "name": "[아론의 지팡이] 손잡이 끝 마디",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     -64.6439,
+     -38.7944,
+     "4.45 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 2.15
+  },
+  {
+   "id": "rod_twigA",
+   "name": "[아론의 지팡이] 가지 1",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     -41,
+     90,
+     0
+    ],
+    "position": [
+     48.7316,
+     -26.8781,
+     "3.5 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 0.8,
+   "height": 13
+  },
+  {
+   "id": "rod_twigB",
+   "name": "[아론의 지팡이] 가지 2",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     24,
+     90,
+     0
+    ],
+    "position": [
+     55.6932,
+     -26.1464,
+     "3.5 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 0.8,
+   "height": 11
+  },
+  {
+   "id": "rod_twigC",
+   "name": "[아론의 지팡이] 가지 3",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     49,
+     90,
+     0
+    ],
+    "position": [
+     40.7754,
+     -27.7143,
+     "3.5 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 0.8,
+   "height": 7
+  },
+  {
+   "id": "rod_almondA1",
+   "name": "[아론의 지팡이] 살구 열매 1",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     58.5428,
+     -18.3493,
+     "4.5 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 1.8
+  },
+  {
+   "id": "rod_almondA2",
+   "name": "[아론의 지팡이] 살구 열매 1 (끝)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     59.6749,
+     -17.3652,
+     "4.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 1.5
+  },
+  {
+   "id": "rod_almondB1",
+   "name": "[아론의 지팡이] 살구 열매 2",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     65.7422,
+     -30.6205,
+     "4.5 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 1.8
+  },
+  {
+   "id": "rod_almondB2",
+   "name": "[아론의 지팡이] 살구 열매 2 (끝)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     67.1125,
+     -31.2306,
+     "4.2 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 1.5
+  },
+  {
+   "id": "rod_almondC",
+   "name": "[아론의 지팡이] 살구 열매 3",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     45.3678,
+     -32.9973,
+     "4.3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 1.6
+  },
+  {
+   "id": "rod_flowerTip",
+   "name": "[아론의 지팡이] 끝 살구꽃 꽃잎",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     66.633,
+     -24.9966,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "pattern": {
+    "pattern": "circular",
+    "count": 5,
+    "diameter": 2.4,
+    "startAngle": 0
+   },
+   "type": "cylinder",
+   "radius": 1.1,
+   "height": 0.8
+  },
+  {
+   "id": "rod_flowerTipC",
+   "name": "[아론의 지팡이] 끝 살구꽃 수술",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     66.633,
+     -24.9966,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 0.8,
+   "height": 1.4
+  },
+  {
+   "id": "rod_flowerA",
+   "name": "[아론의 지팡이] 가지 1 살구꽃 꽃잎",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     51.559,
+     -21.1095,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "pattern": {
+    "pattern": "circular",
+    "count": 5,
+    "diameter": 2.4,
+    "startAngle": 0
+   },
+   "type": "cylinder",
+   "radius": 1.1,
+   "height": 0.8
+  },
+  {
+   "id": "rod_flowerAC",
+   "name": "[아론의 지팡이] 가지 1 살구꽃 수술",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     6
+    ],
+    "position": [
+     51.559,
+     -21.1095,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 0.8,
+   "height": 1.4
+  },
+  {
+   "id": "rod_bud1",
+   "name": "[아론의 지팡이] 새순 1",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     56
+    ],
+    "position": [
+     34.6201,
+     -26.5514,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    3,
+    1.3,
+    1.2
+   ]
+  },
+  {
+   "id": "rod_bud2",
+   "name": "[아론의 지팡이] 새순 2",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     -39
+    ],
+    "position": [
+     29.0293,
+     -30.7588,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    3,
+    1.3,
+    1.2
+   ]
+  },
+  {
+   "id": "rod_bud3",
+   "name": "[아론의 지팡이] 새순 3",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     46
+    ],
+    "position": [
+     60.4881,
+     -23.9331,
+     "3 + 30*explodeZ + 130*explodeInner"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    2.6,
+    1.2,
+    1.2
+   ]
+  },
+  {
+   "id": "lid_plate",
+   "name": "[덮개] 속죄소 판 (출력 시 윗면이 바닥)",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 150,
+    "height": 90
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 4.5,
+   "transform": {
+    "rotation": [
+     180,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "92.5 + 130*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "lid_plug",
+   "name": "[덮개] 본체 단차에 물리는 립",
+   "suppressed": false,
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "rect",
+    "width": 146.7,
+    "height": 86.7
+   },
+   "plane": "XY",
+   "offset": 4.5,
+   "height": 1.4,
+   "transform": {
+    "rotation": [
+     180,
+     0,
+     0
+    ],
+    "position": [
+     0,
+     0,
+     "92.5 + 130*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "lid_pegs",
+   "name": "[덮개] 천사상 핀 소켓 Ø3 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     180,
+     0,
+     0
+    ],
+    "position": [
+     -55,
+     0,
+     "92.5 + 130*explodeZ"
+    ]
+   },
+   "op": "cut",
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 110,
+    "direction": "X"
+   },
+   "type": "cylinder",
+   "radius": 1.65,
+   "height": 3
+  },
+  {
+   "id": "chA_pin",
+   "name": "[천사상 왼쪽] 결합 핀 Ø3",
+   "suppressed": false,
+   "op": "add",
+   "type": "cylinder",
+   "radius": 1.45,
+   "height": 2.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -55,
+     0,
+     "89.7 + 160*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "chA_base",
+   "name": "[천사상 왼쪽] 받침",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -55,
+     0,
+     "92.5 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    18,
+    14,
+    3
+   ]
+  },
+  {
+   "id": "chA_robe",
+   "name": "[천사상 왼쪽] 무릎 꿇은 하체 (옷자락)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -55,
+     0,
+     "95.5 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 5.5,
+   "height": 11
+  },
+  {
+   "id": "chA_torso",
+   "name": "[천사상 왼쪽] 상체",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -55,
+     0,
+     "106.5 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 4,
+   "height": 7
+  },
+  {
+   "id": "chA_head",
+   "name": "[천사상 왼쪽] 머리",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -54.5,
+     0,
+     "115 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 3.5
+  },
+  {
+   "id": "chA_wingR",
+   "name": "[천사상 왼쪽] 오른쪽 날개 (앞으로 45° 상승)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     -45,
+     20
+    ],
+    "position": [
+     -48.3686,
+     7.8695,
+     "123.8137 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    32,
+    2,
+    9
+   ]
+  },
+  {
+   "id": "chA_wingL",
+   "name": "[천사상 왼쪽] 왼쪽 날개 (앞으로 45° 상승)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     -45,
+     -20
+    ],
+    "position": [
+     -48.3686,
+     -7.8695,
+     "123.8137 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    32,
+    2,
+    9
+   ]
+  },
+  {
+   "id": "chB_pin",
+   "name": "[천사상 오른쪽] 결합 핀 Ø3",
+   "suppressed": false,
+   "op": "add",
+   "type": "cylinder",
+   "radius": 1.45,
+   "height": 2.8,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     55,
+     0,
+     "89.7 + 160*explodeZ"
+    ]
+   }
+  },
+  {
+   "id": "chB_base",
+   "name": "[천사상 오른쪽] 받침",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     55,
+     0,
+     "92.5 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    18,
+    14,
+    3
+   ]
+  },
+  {
+   "id": "chB_robe",
+   "name": "[천사상 오른쪽] 무릎 꿇은 하체 (옷자락)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     55,
+     0,
+     "95.5 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 5.5,
+   "height": 11
+  },
+  {
+   "id": "chB_torso",
+   "name": "[천사상 오른쪽] 상체",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     55,
+     0,
+     "106.5 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 4,
+   "height": 7
+  },
+  {
+   "id": "chB_head",
+   "name": "[천사상 오른쪽] 머리",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     54.5,
+     0,
+     "115 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "sphere",
+   "radius": 3.5
+  },
+  {
+   "id": "chB_wingR",
+   "name": "[천사상 오른쪽] 오른쪽 날개 (앞으로 45° 상승)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     -45,
+     -160
+    ],
+    "position": [
+     48.3686,
+     -7.8695,
+     "123.8137 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    32,
+    2,
+    9
+   ]
+  },
+  {
+   "id": "chB_wingL",
+   "name": "[천사상 오른쪽] 왼쪽 날개 (앞으로 45° 상승)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     -45,
+     160
+    ],
+    "position": [
+     48.3686,
+     7.8695,
+     "123.8137 + 160*explodeZ"
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    32,
+    2,
+    9
+   ]
+  },
+  {
+   "id": "rBR_tenon",
+   "name": "[고리 뒤-오른쪽] 도브테일 장부 (슬롯에 아래서 밀어 넣음)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     90
+    ],
+    "position": [
+     53,
+     46.9689,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.3
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 12.5
+  },
+  {
+   "id": "rBR_neck",
+   "name": "[고리 뒤-오른쪽] 목",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     53,
+     49.7345,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    2.6,
+    1.5310889132455356,
+    12.5
+   ]
+  },
+  {
+   "id": "rBR_pad",
+   "name": "[고리 뒤-오른쪽] 받침판",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     53,
+     51.8,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    12,
+    3,
+    12.5
+   ]
+  },
+  {
+   "id": "rBR_ring",
+   "name": "[고리 뒤-오른쪽] 고리 외경 13",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     90,
+     0
+    ],
+    "position": [
+     50,
+     58.3,
+     6
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 6.5,
+   "height": 6
+  },
+  {
+   "id": "rBR_bore",
+   "name": "[고리 뒤-오른쪽] 봉 구멍 내경 8.5 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     90,
+     0
+    ],
+    "position": [
+     49,
+     58.3,
+     6
+    ]
+   },
+   "op": "cut",
+   "type": "cylinder",
+   "radius": 4.25,
+   "height": 8
+  },
+  {
+   "id": "rBR_floor",
+   "name": "[고리 뒤-오른쪽] 바닥 평탄화 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     53,
+     46.9689,
+     -5
+    ]
+   },
+   "op": "cut",
+   "type": "box",
+   "size": [
+    60,
+    60,
+    5
+   ]
+  },
+  {
+   "id": "rBL_tenon",
+   "name": "[고리 뒤-왼쪽] 도브테일 장부 (슬롯에 아래서 밀어 넣음)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     90
+    ],
+    "position": [
+     -53,
+     46.9689,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.3
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 12.5
+  },
+  {
+   "id": "rBL_neck",
+   "name": "[고리 뒤-왼쪽] 목",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -53,
+     49.7345,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    2.6,
+    1.5310889132455356,
+    12.5
+   ]
+  },
+  {
+   "id": "rBL_pad",
+   "name": "[고리 뒤-왼쪽] 받침판",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -53,
+     51.8,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    12,
+    3,
+    12.5
+   ]
+  },
+  {
+   "id": "rBL_ring",
+   "name": "[고리 뒤-왼쪽] 고리 외경 13",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     90,
+     0
+    ],
+    "position": [
+     -56,
+     58.3,
+     6
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 6.5,
+   "height": 6
+  },
+  {
+   "id": "rBL_bore",
+   "name": "[고리 뒤-왼쪽] 봉 구멍 내경 8.5 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     90,
+     0
+    ],
+    "position": [
+     -57,
+     58.3,
+     6
+    ]
+   },
+   "op": "cut",
+   "type": "cylinder",
+   "radius": 4.25,
+   "height": 8
+  },
+  {
+   "id": "rBL_floor",
+   "name": "[고리 뒤-왼쪽] 바닥 평탄화 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     -53,
+     46.9689,
+     -5
+    ]
+   },
+   "op": "cut",
+   "type": "box",
+   "size": [
+    60,
+    60,
+    5
+   ]
+  },
+  {
+   "id": "rFR_tenon",
+   "name": "[고리 앞-오른쪽] 도브테일 장부 (슬롯에 아래서 밀어 넣음)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     -90
+    ],
+    "position": [
+     53,
+     -46.9689,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.3
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 12.5
+  },
+  {
+   "id": "rFR_neck",
+   "name": "[고리 앞-오른쪽] 목",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     53,
+     -49.7345,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    2.6,
+    1.5310889132455356,
+    12.5
+   ]
+  },
+  {
+   "id": "rFR_pad",
+   "name": "[고리 앞-오른쪽] 받침판",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     53,
+     -51.8,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    12,
+    3,
+    12.5
+   ]
+  },
+  {
+   "id": "rFR_ring",
+   "name": "[고리 앞-오른쪽] 고리 외경 13",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     -180,
+     90,
+     0
+    ],
+    "position": [
+     56,
+     -58.3,
+     6
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 6.5,
+   "height": 6
+  },
+  {
+   "id": "rFR_bore",
+   "name": "[고리 앞-오른쪽] 봉 구멍 내경 8.5 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     -180,
+     90,
+     0
+    ],
+    "position": [
+     57,
+     -58.3,
+     6
+    ]
+   },
+   "op": "cut",
+   "type": "cylinder",
+   "radius": 4.25,
+   "height": 8
+  },
+  {
+   "id": "rFR_floor",
+   "name": "[고리 앞-오른쪽] 바닥 평탄화 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     53,
+     -46.9689,
+     -5
+    ]
+   },
+   "op": "cut",
+   "type": "box",
+   "size": [
+    60,
+    60,
+    5
+   ]
+  },
+  {
+   "id": "rFL_tenon",
+   "name": "[고리 앞-왼쪽] 도브테일 장부 (슬롯에 아래서 밀어 넣음)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     -90
+    ],
+    "position": [
+     -53,
+     -46.9689,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "polygon",
+    "sides": 6,
+    "radius": 3.3
+   },
+   "plane": "XY",
+   "offset": 0,
+   "height": 12.5
+  },
+  {
+   "id": "rFL_neck",
+   "name": "[고리 앞-왼쪽] 목",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     -53,
+     -49.7345,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    2.6,
+    1.5310889132455356,
+    12.5
+   ]
+  },
+  {
+   "id": "rFL_pad",
+   "name": "[고리 앞-왼쪽] 받침판",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     -53,
+     -51.8,
+     0
+    ]
+   },
+   "op": "add",
+   "type": "box",
+   "size": [
+    12,
+    3,
+    12.5
+   ]
+  },
+  {
+   "id": "rFL_ring",
+   "name": "[고리 앞-왼쪽] 고리 외경 13",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     -180,
+     90,
+     0
+    ],
+    "position": [
+     -50,
+     -58.3,
+     6
+    ]
+   },
+   "op": "add",
+   "type": "cylinder",
+   "radius": 6.5,
+   "height": 6
+  },
+  {
+   "id": "rFL_bore",
+   "name": "[고리 앞-왼쪽] 봉 구멍 내경 8.5 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     -180,
+     90,
+     0
+    ],
+    "position": [
+     -49,
+     -58.3,
+     6
+    ]
+   },
+   "op": "cut",
+   "type": "cylinder",
+   "radius": 4.25,
+   "height": 8
+  },
+  {
+   "id": "rFL_floor",
+   "name": "[고리 앞-왼쪽] 바닥 평탄화 (cut)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     180
+    ],
+    "position": [
+     -53,
+     -46.9689,
+     -5
+    ]
+   },
+   "op": "cut",
+   "type": "box",
+   "size": [
+    60,
+    60,
+    5
+   ]
+  },
+  {
+   "id": "pB_rod",
+   "name": "[봉 뒤] 운반용 봉 Ø8 (눕혀서 출력)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     "0 + 150*explodeX",
+     58.3,
+     6
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "circle",
+    "radius": 4
+   },
+   "plane": "YZ",
+   "offset": -105,
+   "height": 210
+  },
+  {
+   "id": "pF_rod",
+   "name": "[봉 앞] 운반용 봉 Ø8 (눕혀서 출력)",
+   "suppressed": false,
+   "transform": {
+    "rotation": [
+     0,
+     0,
+     0
+    ],
+    "position": [
+     "0 + -150*explodeX",
+     -58.3,
+     6
+    ]
+   },
+   "op": "add",
+   "type": "extrude",
+   "profile": {
+    "kind": "circle",
+    "radius": 4
+   },
+   "plane": "YZ",
+   "offset": -105,
+   "height": 210
+  }
+ ]
+}

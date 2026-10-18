@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "footR": 7.5, "footH": 5.5, "bodyR": 10, "bodyZ": 12, "wall": 1.2,
+    "neckR": 5, "neckZ": 18, "rimR": 6, "rimH": 1.5, "topZ": 29,
+    "handleX": 8.3, "handleZ": 20, "handleR": 3.4, "handleHole": 2, "handleT": 1.6
+  },
+  "features": [
+    { "id": "foot", "type": "cylinder", "name": "굽", "radius": "footR", "height": "footH" },
+    { "id": "belly", "type": "sphere", "name": "몸통", "radius": "bodyR", "transform": { "position": [0, 0, "bodyZ"] } },
+    { "id": "neck", "type": "cylinder", "name": "목", "radius": "neckR", "height": "topZ - neckZ", "transform": { "position": [0, 0, "neckZ"] } },
+    { "id": "rim", "type": "cylinder", "name": "입술", "radius": "rimR", "height": "rimH", "transform": { "position": [0, 0, "topZ - rimH"] } },
+    { "id": "handles", "type": "cylinder", "name": "양쪽 손잡이", "radius": "handleR", "height": "handleT",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "2*handleX", "direction": "X" },
+      "transform": { "rotation": [90, 0, 0], "position": ["-handleX", "handleT/2", "handleZ"] } },
+    { "id": "handleHoles", "type": "cylinder", "name": "손잡이 구멍 (cut)", "op": "cut", "radius": "handleHole", "height": "handleT + 2",
+      "pattern": { "pattern": "linear", "count": 2, "spacing": "2*handleX", "direction": "X" },
+      "transform": { "rotation": [90, 0, 0], "position": ["-handleX", "handleT/2 + 1", "handleZ"] } },
+    { "id": "cavity", "type": "sphere", "name": "내부 (cut)", "op": "cut", "radius": "bodyR - wall", "transform": { "position": [0, 0, "bodyZ"] } },
+    { "id": "bore", "type": "cylinder", "name": "목 구멍 (cut)", "op": "cut", "radius": "neckR - wall", "height": "topZ", "transform": { "position": [0, 0, "bodyZ + 4"] } }
+  ]
+}

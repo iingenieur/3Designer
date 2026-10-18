@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "L": 150,
+    "W": 90,
+    "T": 4.5,
+    "wall": 3,
+    "rebW": 1.5,
+    "rebD": 1.5,
+    "clr": 0.15,
+    "pegD": 3.3,
+    "pegDepth": 3,
+    "pegInset": 20
+  },
+  "features": [
+    {
+      "id": "plate",
+      "type": "extrude",
+      "name": "속죄소 판 (출력 시 윗면이 바닥)",
+      "profile": {
+        "kind": "rect",
+        "width": "L",
+        "height": "W"
+      },
+      "height": "T"
+    },
+    {
+      "id": "plug",
+      "type": "extrude",
+      "name": "본체 단차에 물리는 립",
+      "profile": {
+        "kind": "rect",
+        "width": "L - 2*wall + 2*rebW - 2*clr",
+        "height": "W - 2*wall + 2*rebW - 2*clr"
+      },
+      "offset": "T",
+      "height": "rebD - 0.1"
+    },
+    {
+      "id": "pegs",
+      "type": "cylinder",
+      "name": "천사상 핀 소켓 Ø3 (cut)",
+      "transform": {
+        "position": [
+          "-(L/2 - pegInset)",
+          0,
+          0
+        ]
+      },
+      "op": "cut",
+      "pattern": {
+        "pattern": "linear",
+        "count": 2,
+        "spacing": "L - 2*pegInset"
+      },
+      "radius": "pegD/2",
+      "height": "pegDepth"
+    }
+  ]
+}

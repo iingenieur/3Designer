@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": {
+    "dvR": 3.5, "clr": 0.2, "tenH": 12.5, "neckW": 2.6, "padW": 12, "padT": 3,
+    "ringOD": 13, "ringID": 8.5, "ringT": 6, "flat": 0.5
+  },
+  "features": [
+    { "id": "tenon", "type": "extrude", "name": "도브테일 장부 (슬롯에 아래서 밀어 넣음)", "plane": "XY", "height": "tenH",
+      "profile": { "kind": "polygon", "sides": 6, "radius": "dvR - clr" },
+      "transform": { "rotation": [0, 0, 90] } },
+    { "id": "neck", "type": "box", "name": "목", "size": ["neckW", "dvR*cos(30) + 0.5 - 2", "tenH"],
+      "transform": { "position": [0, "(2 + dvR*cos(30) + 0.5)/2", 0] } },
+    { "id": "pad", "type": "box", "name": "받침판", "size": ["padW", "padT", "tenH"],
+      "transform": { "position": [0, "dvR*cos(30) + 0.3 + padT/2", 0] } },
+    { "id": "ring", "type": "cylinder", "name": "고리 외경 13", "radius": "ringOD/2", "height": "ringT",
+      "transform": { "rotation": [0, 90, 0], "position": ["-ringT/2", "dvR*cos(30) + 0.3 + padT + ringOD/2 - 1.5", "ringOD/2 - flat"] } },
+    { "id": "bore", "type": "cylinder", "name": "봉 구멍 내경 8.5 (cut)", "op": "cut", "radius": "ringID/2", "height": "ringT + 2",
+      "transform": { "rotation": [0, 90, 0], "position": ["-(ringT + 2)/2", "dvR*cos(30) + 0.3 + padT + ringOD/2 - 1.5", "ringOD/2 - flat"] } },
+    { "id": "floor", "type": "box", "name": "바닥 평탄화 (cut)", "op": "cut", "size": [60, 60, 5],
+      "transform": { "position": [0, 0, -5] } }
+  ]
+}

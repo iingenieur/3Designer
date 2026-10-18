@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "units": "mm",
+  "parameters": { "capR": 6, "capT": 2, "plugR": 3.6, "plugH": 3 },
+  "features": [
+    { "id": "cap", "type": "cylinder", "name": "항아리 뚜껑 (출력 시 윗면이 바닥)", "radius": "capR", "height": "capT" },
+    { "id": "plug", "type": "cylinder", "name": "목에 끼우는 마개", "radius": "plugR", "height": "plugH", "transform": { "position": [0, 0, "capT"] } },
+    { "id": "edge", "type": "chamfer", "name": "윗면 모따기", "distance": 0.4, "edges": "bottom" }
+  ]
+}

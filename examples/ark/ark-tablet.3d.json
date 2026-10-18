@@ -1,0 +1,571 @@
+{
+ "version": 1,
+ "units": "mm",
+ "parameters": {
+  "TW": 45,
+  "TH": 65,
+  "TT": 6,
+  "cornerR": 1.5,
+  "d": 0.8,
+  "frameInset": 3,
+  "frameW": 1,
+  "lineW": 1.6,
+  "lineTop": 7.5,
+  "lineGap": 4.9,
+  "groupGap": 1.4,
+  "margin": 2.5
+ },
+ "features": [
+  {
+   "id": "slab",
+   "type": "extrude",
+   "name": "돌판",
+   "plane": "XY",
+   "height": "TT",
+   "profile": {
+    "kind": "rect",
+    "width": "TW",
+    "height": "TH",
+    "cornerRadius": "cornerR"
+   }
+  },
+  {
+   "id": "framet",
+   "type": "extrude",
+   "name": "앞면 테두리 홈 (cut)",
+   "op": "cut",
+   "plane": "XY",
+   "offset": "TT - d",
+   "height": "d + 1",
+   "profile": {
+    "kind": "rect",
+    "width": "TW - 2*frameInset",
+    "height": "TH - 2*frameInset",
+    "cornerRadius": 1
+   }
+  },
+  {
+   "id": "innert",
+   "type": "extrude",
+   "name": "앞면 글자 면 복원",
+   "plane": "XY",
+   "offset": "TT - d",
+   "height": "d",
+   "profile": {
+    "kind": "rect",
+    "width": "TW - 2*frameInset - 2*frameW",
+    "height": "TH - 2*frameInset - 2*frameW",
+    "cornerRadius": 0.5
+   }
+  },
+  {
+   "id": "frameb",
+   "type": "extrude",
+   "name": "뒷면 테두리 홈 (cut)",
+   "op": "cut",
+   "plane": "XY",
+   "offset": -1,
+   "height": "d + 1",
+   "profile": {
+    "kind": "rect",
+    "width": "TW - 2*frameInset",
+    "height": "TH - 2*frameInset",
+    "cornerRadius": 1
+   }
+  },
+  {
+   "id": "innerb",
+   "type": "extrude",
+   "name": "뒷면 글자 면 복원",
+   "plane": "XY",
+   "offset": 0,
+   "height": "d",
+   "profile": {
+    "kind": "rect",
+    "width": "TW - 2*frameInset - 2*frameW",
+    "height": "TH - 2*frameInset - 2*frameW",
+    "cornerRadius": 0.5
+   }
+  },
+  {
+   "id": "lt1",
+   "type": "box",
+   "name": "앞면 계명 1 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    6,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.5,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 28.5",
+     "TH/2 - lineTop - 0*lineGap - 0*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt2",
+   "type": "box",
+   "name": "앞면 계명 1 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    5,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 7,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 16.5",
+     "TH/2 - lineTop - 1*lineGap - 0*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt3",
+   "type": "box",
+   "name": "앞면 계명 2 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    4.5,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 5,
+    "spacing": 6.6,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 28.65",
+     "TH/2 - lineTop - 2*lineGap - 1*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt4",
+   "type": "box",
+   "name": "앞면 계명 2 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    8,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 10,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 14.0",
+     "TH/2 - lineTop - 3*lineGap - 1*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt5",
+   "type": "box",
+   "name": "앞면 계명 3 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    9,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 11,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 26.5",
+     "TH/2 - lineTop - 4*lineGap - 2*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt6",
+   "type": "box",
+   "name": "앞면 계명 3 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    4,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 6.5,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 21.5",
+     "TH/2 - lineTop - 5*lineGap - 2*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt7",
+   "type": "box",
+   "name": "앞면 계명 4 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    7,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.4,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 28.700000000000003",
+     "TH/2 - lineTop - 6*lineGap - 3*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt8",
+   "type": "box",
+   "name": "앞면 계명 4 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    6,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 8,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 19.0",
+     "TH/2 - lineTop - 7*lineGap - 3*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt9",
+   "type": "box",
+   "name": "앞면 계명 5 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    3.6,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 6,
+    "spacing": 5.5,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 29.3",
+     "TH/2 - lineTop - 8*lineGap - 4*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lt10",
+   "type": "box",
+   "name": "앞면 계명 5 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    7,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 9,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "TW/2 - frameInset - frameW - margin - 12.5",
+     "TH/2 - lineTop - 9*lineGap - 4*groupGap",
+     "TT - d"
+    ]
+   }
+  },
+  {
+   "id": "lb1",
+   "type": "box",
+   "name": "뒷면 계명 1 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    6,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.5,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 3.0",
+     "TH/2 - lineTop - 0*lineGap - 0*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb2",
+   "type": "box",
+   "name": "뒷면 계명 1 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    5,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 7,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 2.5",
+     "TH/2 - lineTop - 1*lineGap - 0*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb3",
+   "type": "box",
+   "name": "뒷면 계명 2 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    4.5,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 5,
+    "spacing": 6.6,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 2.25",
+     "TH/2 - lineTop - 2*lineGap - 1*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb4",
+   "type": "box",
+   "name": "뒷면 계명 2 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    8,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 10,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 4.0",
+     "TH/2 - lineTop - 3*lineGap - 1*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb5",
+   "type": "box",
+   "name": "뒷면 계명 3 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    9,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 11,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 4.5",
+     "TH/2 - lineTop - 4*lineGap - 2*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb6",
+   "type": "box",
+   "name": "뒷면 계명 3 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    4,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 6.5,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 2.0",
+     "TH/2 - lineTop - 5*lineGap - 2*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb7",
+   "type": "box",
+   "name": "뒷면 계명 4 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    7,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 4,
+    "spacing": 8.4,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 3.5",
+     "TH/2 - lineTop - 6*lineGap - 3*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb8",
+   "type": "box",
+   "name": "뒷면 계명 4 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    6,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 3,
+    "spacing": 8,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 3.0",
+     "TH/2 - lineTop - 7*lineGap - 3*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb9",
+   "type": "box",
+   "name": "뒷면 계명 5 글자줄 1 (음각)",
+   "op": "cut",
+   "size": [
+    3.6,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 6,
+    "spacing": 5.5,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 1.8",
+     "TH/2 - lineTop - 8*lineGap - 4*groupGap",
+     -1
+    ]
+   }
+  },
+  {
+   "id": "lb10",
+   "type": "box",
+   "name": "뒷면 계명 5 글자줄 2 (음각)",
+   "op": "cut",
+   "size": [
+    7,
+    "lineW",
+    "d + 1"
+   ],
+   "pattern": {
+    "pattern": "linear",
+    "count": 2,
+    "spacing": 9,
+    "direction": "X"
+   },
+   "transform": {
+    "position": [
+     "-(TW/2 - frameInset - frameW - margin) + 3.5",
+     "TH/2 - lineTop - 9*lineGap - 4*groupGap",
+     -1
+    ]
+   }
+  }
+ ]
+}
